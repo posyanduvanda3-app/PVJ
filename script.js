@@ -201,7 +201,7 @@ function renderSidebar() {
 
     document.getElementById('sidebar').innerHTML = `
         <div class="sidebar-header">
-            <div class="bg-emerald-600 p-2 rounded-xl text-white">${icons.shield}</div>
+            <img src="${logo_posyandu}" alt="Logo Posyandu" class="logo-posyandu" onerror="this.style.display='none'">
             <div>
                 <h1 class="font-black text-white text-sm">Posyandu Digital</h1>
                 <p class="text-xs text-slate-400">v1.0 • Live</p>
@@ -288,7 +288,7 @@ function renderDashboard() {
     balita: state.pesertaList.filter(p => p.kategori === 'Balita').length,
     ibuHamil: state.pesertaList.filter(p => p.kategori === 'Ibu Hamil').length,
     lansia: state.pesertaList.filter(p => p.kategori === 'Lansia').length,
-    lainnya: state.pesertaList.filter(p => p.kategori === 'Remaja' || p.kategori === 'Dewasa').length, // <-- TAMBAHKAN INI
+    lainnya: state.pesertaList.filter(p => p.kategori === 'Remaja' || p.kategori === 'Dewasa').length,
     stunting: state.pemeriksaanList.filter(p => p.kategori === 'Balita' && p.tinggi_menurut_umur === 'Sangat Pendek (Stunting)').length
 };
 
@@ -987,6 +987,38 @@ function toggleUserStatus(id) {
 document.getElementById('modal-overlay').addEventListener('click', (e) => {
     if (e.target === document.getElementById('modal-overlay')) closeModal();
 });
+
+// ==========================================
+// 8. MOBILE MENU TOGGLE
+// ==========================================
+function initMobileMenu() {
+    const menuToggle = document.getElementById('menu-toggle');
+    const sidebar = document.getElementById('sidebar');
+    const mobileOverlay = document.getElementById('mobile-overlay');
+    
+    if (menuToggle && sidebar && mobileOverlay) {
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+            mobileOverlay.classList.toggle('hidden');
+        });
+        
+        mobileOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            mobileOverlay.classList.add('hidden');
+        });
+        
+        // Close sidebar when clicking nav button on mobile
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.nav-btn') && window.innerWidth <= 768) {
+                sidebar.classList.remove('active');
+                mobileOverlay.classList.add('hidden');
+            }
+        });
+    }
+}
+
+// Initialize mobile menu
+initMobileMenu();
 
 // Initialize App
 renderApp();
