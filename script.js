@@ -22,8 +22,7 @@ const icons = {
 const INITIAL_DATA = {
     users: [
         { id: 1, nama: 'Budi Santoso', username: 'admin', role: 'Admin', status: 'Aktif' },
-        { id: 2, nama: 'Siti Aminah', username: 'kader', role: 'Kader', status: 'Aktif' },
-        { id: 3, nama: 'Dr. Hendra', username: 'petugas', role: 'Petugas Puskesmas', status: 'Aktif' }
+        { id: 2, nama: 'Siti Aminah', username: 'kader', role: 'Kader', status: 'Aktif' }
     ],
     peserta: [
         { id: 'REG-001', no_registrasi: 'REG-001', nik: '3201020304050001', no_kk: '3201020304059999', nama: 'Alvaro Putra', tanggal_lahir: '2024-03-15', jenis_kelamin: 'Laki-laki', alamat: 'RT 02/RW 04', kategori: 'Balita', no_hp: '081234567890' },
