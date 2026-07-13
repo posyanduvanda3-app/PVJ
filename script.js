@@ -441,7 +441,7 @@ function renderPeserta() {
             </div>
             ${!isReadOnly() ? `<button class="btn btn-primary" data-action="add-peserta">${icons.plus} Daftarkan Peserta</button>` : ''}
         </div>
-        <div class="card p-0 overflow-hidden">
+        <div class="card p-0 overflow-x-auto">
             <table class="data-table">
                 <thead><tr><th>No. Reg / NIK</th><th>Nama Lengkap</th><th>Kategori</th><th>Umur & Gender</th><th class="text-right">Aksi</th></tr></thead>
                 <tbody>
@@ -681,8 +681,8 @@ function openPesertaModal(id = null) {
     const p = id ? state.pesertaList.find(x => x.id === id) : null;
     const html = `
         <div class="modal-header"><h3 class="text-lg font-black text-slate-800">${p ? 'Ubah' : 'Daftarkan'} Peserta</h3><button class="btn-icon" onclick="closeModal()">${icons.close}</button></div>
-        <form id="form-peserta" class="modal-body">
-            <div class="grid grid-cols-2 gap-4">
+        <form id="form-peserta" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
+            <div class="modal-body" style="flex: 1; overflow-y: auto;">
                 <div class="form-group"><label class="form-label">NIK (16 Digit)</label><input type="text" id="p-nik" class="form-input" maxlength="16" value="${p ? p.nik : ''}" required></div>
                 <div class="form-group"><label class="form-label">No. KK</label><input type="text" id="p-kk" class="form-input" maxlength="16" value="${p ? p.no_kk : ''}" required></div>
             </div>
@@ -696,7 +696,10 @@ function openPesertaModal(id = null) {
                 <div class="form-group"><label class="form-label">No. HP</label><input type="text" id="p-hp" class="form-input" value="${p ? p.no_hp : ''}"></div>
             </div>
             <div class="form-group"><label class="form-label">Alamat</label><textarea id="p-alamat" class="form-input" rows="2">${p ? p.alamat : ''}</textarea></div>
-            <div class="modal-footer -m-6 mt-4 rounded-b-2xl"><button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button><button type="submit" class="btn btn-primary">Simpan</button></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
+                <button type="submit" class="btn btn-primary">Simpan</button>
+            </div>
         </form>
     `;
     openModal(html);
