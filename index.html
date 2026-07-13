@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Posyandu Digital</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Toast Notification Container -->
+    <div id="toast-container"></div>
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="screen active">
+        <div class="login-wrapper">
+            <div class="login-header">
+                <div class="login-logo">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                </div>
+                <h2 class="text-3xl font-black text-slate-800">Posyandu <span class="text-emerald-600">Digital</span></h2>
+            </div>
+            <p class="text-center text-sm text-slate-500 mb-8">Sistem Informasi Pencatatan & Monitoring Pemeriksaan Kesehatan</p>
+            
+            <div class="card login-card">
+                <form id="login-form" class="space-y-6">
+                    <div id="login-error" class="hidden bg-rose-50 border-l-4 border-rose-500 p-3 rounded-r-md text-sm text-rose-700 font-medium"></div>
+                    <div class="form-group">
+                        <label class="form-label">Username</label>
+                        <input type="text" id="login-username" class="form-input" placeholder="Masukkan username (cth: admin, kader)" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" id="login-password" class="form-input" placeholder="Masukkan sandi Anda" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Pilih Peran (Role)</label>
+                        <div class="role-selector">
+                            <button type="button" class="role-btn active" data-role="Kader">Kader</button>
+                            <button type="button" class="role-btn" data-role="Admin">Admin</button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full">Masuk Aplikasi</button>
+                </form>
+                <div class="login-helper mt-6">
+                    <span class="font-bold text-slate-700 block mb-1">Panduan Cepat Akses Demo:</span>
+                    <ul class="text-xs text-slate-600 space-y-1">
+                        <li>Akun Admin: <code>admin</code> | Sandi: <code>apa saja</code></li>
+                        <li>Akun Kader: <code>kader</code> | Sandi: <code>apa saja</code></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Shell -->
+    <div id="app-shell" class="screen">
+        <aside class="sidebar" id="sidebar"></aside>
+        <main class="main-content">
+            <header class="top-header" id="top-header"></header>
+            <div class="view-container" id="view-container"></div>
+        </main>
+    </div>
+
+    <!-- Modal Overlay -->
+    <div id="modal-overlay" class="modal-overlay hidden">
+        <div id="modal-content" class="modal-content"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
