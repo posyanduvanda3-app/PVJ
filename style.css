@@ -917,3 +917,52 @@ svg { flex-shrink: 0; }
     background: transparent;
     padding: 0.25rem;
 }
+
+/* --- PASSWORD TOGGLE FLEXBOX (Mobile Friendly) --- */
+.password-wrapper {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--slate-200);
+    border-radius: var(--radius-xl);
+    background: white;
+    transition: all 0.2s;
+}
+
+/* Efek fokus dipindahkan ke wrapper agar terlihat menyatu */
+.password-wrapper:focus-within {
+    border-color: var(--emerald-500);
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.password-input {
+    border: none !important; 
+    box-shadow: none !important; 
+    flex: 1;
+    padding-right: 0.5rem !important;
+}
+
+/* Hilangkan efek fokus default pada input agar tidak double border */
+.password-input:focus {
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.toggle-btn {
+    background: transparent;
+    border: none;
+    color: var(--slate-400);
+    cursor: pointer;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    min-width: 2.75rem; /* Area sentuh profesional untuk HP */
+    min-height: 2.75rem;
+    border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
+}
+
+.toggle-btn:hover {
+    color: var(--slate-600);
+    background: var(--slate-50);
+}
