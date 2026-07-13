@@ -182,6 +182,26 @@ document.getElementById('login-form').addEventListener('submit', (e) => {
     renderApp();
 });
 
+// ✅ FITUR LIHAT/SEMBUNYI PASSWORD
+const togglePasswordBtn = document.getElementById('toggle-password');
+const passwordInput = document.getElementById('login-password');
+
+if (togglePasswordBtn && passwordInput) {
+    // Set ikon awal (mata terbuka)
+    togglePasswordBtn.innerHTML = icons.eye;
+
+    // Logika saat tombol diklik
+    togglePasswordBtn.addEventListener('click', () => {
+        const isPassword = passwordInput.getAttribute('type') === 'password';
+        
+        // Ubah tipe input
+        passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+        
+        // Ubah ikon (mata tertutup jika teks terlihat, dan sebaliknya)
+        togglePasswordBtn.innerHTML = isPassword ? icons.eyeOff : icons.eye;
+    });
+}
+
 function handleLogout() {
     addAuditLog('Logout dari aplikasi');
     state.user = null;
