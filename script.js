@@ -21,21 +21,39 @@ const icons = {
 
 const INITIAL_DATA = {
     users: [
-        { id: 1, nama: 'Budi Santoso', username: 'admin', role: 'Admin', status: 'Aktif' },
-        { id: 2, nama: 'Siti Aminah', username: 'kader', role: 'Kader', status: 'Aktif' }
+        { 
+            id: 1, 
+            nama: 'Budi Juniansyah', 
+            username: 'admin', 
+            password: 'admin123', 
+            role: 'Admin', 
+            status: 'Aktif' 
+        },
+        { 
+            id: 2, 
+            nama: 'Siti Aminah', 
+            username: 'kader', 
+            password: 'kader123', 
+            role: 'Kader', 
+            status: 'Aktif' 
+        }
     ],
+
     peserta: [
         { id: 'REG-001', no_registrasi: 'REG-001', nik: '3201020304050001', no_kk: '3201020304059999', nama: 'Alvaro Putra', tanggal_lahir: '2024-03-15', jenis_kelamin: 'Laki-laki', alamat: 'RT 02/RW 04', kategori: 'Balita', no_hp: '081234567890' },
         { id: 'REG-002', no_registrasi: 'REG-002', nik: '3201020304050002', no_kk: '3201020304058888', nama: 'Siti Rahma', tanggal_lahir: '1998-08-20', jenis_kelamin: 'Perempuan', alamat: 'RT 01/RW 03', kategori: 'Ibu Hamil', no_hp: '082345678901' },
         { id: 'REG-003', no_registrasi: 'REG-003', nik: '3201020304050003', no_kk: '3201020304057777', nama: 'Mbah Kromo', tanggal_lahir: '1955-11-12', jenis_kelamin: 'Laki-laki', alamat: 'RT 03/RW 04', kategori: 'Lansia', no_hp: '083456789012' }
     ],
+
     pemeriksaan: [
         { id: 'PEM-001', peserta_id: 'REG-001', nama_peserta: 'Alvaro Putra', kategori: 'Balita', tanggal: new Date().toISOString().split('T')[0], berat_badan: '12.5', tinggi_badan: '88', imt: '16.1', tekanan_darah: '90/60', suhu: '36.5', nadi: '98', pernapasan: '24', status_gizi: 'Sesuai / Baik', tinggi_menurut_umur: 'Normal', imunisasi: 'DPT-HB-Hib 3', vitamin_a: 'Ya', keluhan: 'Tidak ada', diagnosa: 'Pertumbuhan baik', tindakan: 'PMT Balita', petugas: 'Siti Aminah', rujukan: 'Tidak' },
         { id: 'PEM-002', peserta_id: 'REG-002', nama_peserta: 'Siti Rahma', kategori: 'Ibu Hamil', tanggal: new Date().toISOString().split('T')[0], berat_badan: '62.4', tinggi_badan: '158', imt: '25.0', tekanan_darah: '110/70', suhu: '36.6', nadi: '84', pernapasan: '20', usia_kehamilan: '24 Minggu', tinggi_fundus: '22', lila: '26', tablet_tambah_darah: 'Ya', djj: '142', keluhan: 'Mual ringan', diagnosa: 'Kehamilan normal', tindakan: 'Konseling gizi', petugas: 'Siti Aminah', rujukan: 'Tidak' }
     ],
+
     jadwal: [
         { id: 1, tanggal: '2026-07-15', lokasi: 'Balai RW 04 Kelurahan Makmur', jam_mulai: '08:00', jam_selesai: '11:30' }
     ],
+
     logs: [
         { id: 1, user: 'admin', aktivitas: 'Melakukan login aplikasi', tanggal: new Date().toISOString().replace('T', ' ').substring(0, 19) }
     ]
@@ -49,7 +67,6 @@ const logo_posyandu = 'images/logo_posyandu.png';
 // ==========================================
 const state = {
     user: null,
-    loginRole: 'Kader',
     currentMenu: 'dashboard',
     usersList: [...INITIAL_DATA.users],
     pesertaList: [...INITIAL_DATA.peserta],
@@ -137,27 +154,31 @@ document.getElementById('login-form').addEventListener('submit', (e) => {
         return;
     }
 
-    const foundUser = state.usersList.find(u => u.username.toLowerCase() === username.toLowerCase() && u.status === 'Aktif');
-    if (foundUser) {
-        state.user = { ...foundUser, actualRole: state.loginRole };
-        errorEl.classList.add('hidden');
-        addAuditLog(`Login sebagai ${state.user.nama} (${state.user.actualRole})`);
-        showToast(`Selamat datang, ${state.user.nama}!`);
-        document.getElementById('login-screen').classList.remove('active');
-        document.getElementById('app-shell').classList.add('active');
-        renderApp();
-    } else {
+    const foundUser = state.usersList.find(u => 
+        u.username.toLowerCase() === username.toLowerCase() && u.status === 'Aktif'
+    );
+
+    if (!foundUser) {
         errorEl.textContent = 'Pengguna tidak ditemukan atau berstatus Nonaktif.';
         errorEl.classList.remove('hidden');
+        return;
     }
-});
 
-document.querySelectorAll('.role-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        state.loginRole = btn.dataset.role;
-    });
+    if (foundUser.password !== password) {
+        errorEl.textContent = 'Password salah! Silakan coba lagi.';
+        errorEl.classList.remove('hidden');
+        return;
+    }
+
+    // ✅ LANGSUNG GUNAKAN ROLE DARI DATABASE, TIDAK PERLU PILIH MANUAL
+    state.user = { ...foundUser, actualRole: foundUser.role };
+    
+    errorEl.classList.add('hidden');
+    addAuditLog(`Login sebagai ${state.user.nama} (${state.user.actualRole})`);
+    showToast(`Selamat datang, ${state.user.nama}!`);
+    document.getElementById('login-screen').classList.remove('active');
+    document.getElementById('app-shell').classList.add('active');
+    renderApp();
 });
 
 function handleLogout() {
@@ -951,24 +972,71 @@ function deleteJadwal(id) {
 function openUserModal(id = null) {
     const u = id ? state.usersList.find(x => x.id == id) : null;
     const html = `
-        <div class="modal-header"><h3 class="text-lg font-black text-slate-800">${u ? 'Edit' : 'Tambah'} Pengguna</h3><button class="btn-icon" onclick="closeModal()">${icons.close}</button></div>
+        <div class="modal-header">
+            <h3 class="text-lg font-black text-slate-800">${u ? 'Edit' : 'Tambah'} Pengguna</h3>
+            <button class="btn-icon" onclick="closeModal()">${icons.close}</button>
+        </div>
         <form id="form-user" class="modal-body">
-            <div class="form-group"><label class="form-label">Nama Lengkap</label><input type="text" id="u-nama" class="form-input" value="${u ? u.nama : ''}" required></div>
-            <div class="form-group"><label class="form-label">Username</label><input type="text" id="u-user" class="form-input" value="${u ? u.username : ''}" required></div>
-            <div class="form-group"><label class="form-label">Password</label><input type="password" id="u-pass" class="form-input" value="${u ? '******' : ''}" required></div>
-            <div class="grid grid-cols-2 gap-4">
-                <div class="form-group"><label class="form-label">Role</label><select id="u-role" class="form-input"><option value="Kader" ${u?.role === 'Kader' ? 'selected' : ''}>Kader</option><option value="Admin" ${u?.role === 'Admin' ? 'selected' : ''}>Admin</option></select></div>
-                <div class="form-group"><label class="form-label">Status</label><select id="u-status" class="form-input"><option value="Aktif" ${u?.status === 'Aktif' ? 'selected' : ''}>Aktif</option><option value="Nonaktif" ${u?.status === 'Nonaktif' ? 'selected' : ''}>Nonaktif</option></select></div>
+            <div class="form-group">
+                <label class="form-label">Nama Lengkap</label>
+                <input type="text" id="u-nama" class="form-input" value="${u ? u.nama : ''}" required>
             </div>
-            <div class="modal-footer -m-6 mt-4 rounded-b-2xl"><button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button><button type="submit" class="btn btn-primary">Simpan</button></div>
+            <div class="form-group">
+                <label class="form-label">Username</label>
+                <input type="text" id="u-user" class="form-input" value="${u ? u.username : ''}" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" id="u-pass" class="form-input" 
+                       placeholder="${u ? 'Kosongkan jika tidak ingin mengubah' : 'Masukkan password'}" 
+                       ${u ? '' : 'required'}>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="form-group">
+                    <label class="form-label">Role</label>
+                    <select id="u-role" class="form-input">
+                        <option value="Kader" ${u?.role === 'Kader' ? 'selected' : ''}>Kader</option>
+                        <option value="Admin" ${u?.role === 'Admin' ? 'selected' : ''}>Admin</option>
+                        <option value="Petugas Puskesmas" ${u?.role === 'Petugas Puskesmas' ? 'selected' : ''}>Petugas Puskesmas</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select id="u-status" class="form-input">
+                        <option value="Aktif" ${u?.status === 'Aktif' ? 'selected' : ''}>Aktif</option>
+                        <option value="Nonaktif" ${u?.status === 'Nonaktif' ? 'selected' : ''}>Nonaktif</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer -m-6 mt-4 rounded-b-2xl">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
+                <button type="submit" class="btn btn-primary">Simpan</button>
+            </div>
         </form>
     `;
     openModal(html);
+    
     document.getElementById('form-user').onsubmit = (e) => {
         e.preventDefault();
-        const data = { nama: document.getElementById('u-nama').value, username: document.getElementById('u-user').value, password: document.getElementById('u-pass').value, role: document.getElementById('u-role').value, status: document.getElementById('u-status').value };
-        if (u) { Object.assign(u, data); showToast('User diperbarui!'); }
-        else { state.usersList.push({ id: Date.now(), ...data }); showToast('User baru ditambahkan!'); }
+        const passwordInput = document.getElementById('u-pass').value;
+        
+        const data = { 
+            nama: document.getElementById('u-nama').value, 
+            username: document.getElementById('u-user').value, 
+            role: document.getElementById('u-role').value, 
+            status: document.getElementById('u-status').value 
+        };
+        
+        // ✅ Hanya update password jika diisi (untuk edit) atau wajib untuk user baru
+        if (u) {
+            Object.assign(u, data);
+            if (passwordInput) u.password = passwordInput; // Update password hanya jika diisi
+            showToast('User diperbarui!');
+        } else {
+            if (!passwordInput) return showToast('Password wajib diisi untuk user baru!', 'error');
+            state.usersList.push({ id: Date.now(), password: passwordInput, ...data });
+            showToast('User baru ditambahkan!');
+        }
         addAuditLog(`Update user: ${data.username}`);
         closeModal();
         renderView();
