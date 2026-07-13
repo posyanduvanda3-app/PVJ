@@ -61,7 +61,7 @@ const INITIAL_DATA = {
 };
 
 // Logo Posyandu
-const logo_posyandu = 'images/logo_posyandu.png';
+const logo_posyandu = 'Images/logo_posyandu.png';
 
 // ==========================================
 // 1. KONFIGURASI API (GANTI DENGAN URL DEPLOYMENT ANDA)
