@@ -149,7 +149,7 @@ document.getElementById('login-form').addEventListener('submit', (e) => {
     const errorEl = document.getElementById('login-error');
 
     if (!username || !password) {
-        errorEl.textContent = 'Username dan password wajib diisi.';
+        errorEl.textContent = 'Username dan password wajib di isi.';
         errorEl.classList.remove('hidden');
         return;
     }
@@ -165,7 +165,7 @@ document.getElementById('login-form').addEventListener('submit', (e) => {
     }
 
     if (foundUser.password !== password) {
-        errorEl.textContent = 'Password salah! Silakan coba lagi.';
+        errorEl.textContent = 'Password salah ! Silahkan coba lagi.';
         errorEl.classList.remove('hidden');
         return;
     }
