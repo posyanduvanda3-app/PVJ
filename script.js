@@ -66,7 +66,7 @@ const logo_posyandu = 'Images/logo_posyandu.png';
 // ==========================================
 // 1. KONFIGURASI API (GANTI DENGAN URL DEPLOYMENT ANDA)
 // ==========================================
-const API_URL = 'https://script.google.com/macros/s/AKfycby7KCcNQq2VhlDxzK6Dq-V_MkheIms0KKuJheW7ZoTFNoilFgc0fe-pQkYBv-GdGBpV/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbwO6Bk6GBSzfvQlyz_IW7bBmdsGHu_tWBMSAKkGzA74Wk2Z4kD5oySpDczkWS4svi6h/exec';
 
 // State awal masih kosong, akan diisi dari Spreadsheet
 const state = {
@@ -89,25 +89,39 @@ const state = {
 // 2. FUNGSI INTEGRASI REAL-TIME
 // ==========================================
 
-// Ambil semua data dari Spreadsheet saat aplikasi dimuat
+// Data cadangan jika koneksi ke Spreadsheet gagal/terlambat
+const INITIAL_DATA_USERS = [
+    { id: 1, nama: 'Budi Juniansyah', username: 'admin', password: 'admin123', role: 'Admin', status: 'Aktif' },
+    { id: 2, nama: 'Siti Aminah', username: 'kader', password: 'kader123', role: 'Kader', status: 'Aktif' }
+];
+
 async function loadDatabaseFromSpreadsheet() {
+    // Tampilkan loading (opsional: bisa tambahkan spinner di HTML)
+    console.log("Memuat data dari Spreadsheet...");
+    
     try {
-        showToast('Memuat data dari server...', 'info');
         const response = await fetch(`${API_URL}?action=getAllData`);
+        
+        if (!response.ok) throw new Error("Gagal terhubung ke API");
+        
         const data = await response.json();
         
-        state.usersList = data.users || [];
+        // Pastikan data ada, jika kosong/gagal, gunakan INITIAL_DATA
+        state.usersList = (data.users && data.users.length > 0) ? data.users : INITIAL_DATA_USERS;
         state.pesertaList = data.peserta || [];
         state.pemeriksaanList = data.pemeriksaan || [];
         state.jadwalList = data.jadwal || [];
         state.logActivities = data.logs || [];
         
-        state.isLoading = false;
-        renderApp(); // Render ulang setelah data siap
-        showToast('Data berhasil dimuat!', 'success');
+        console.log("Data berhasil dimuat:", state.usersList);
+        renderApp(); 
+        
     } catch (error) {
-        console.error('Gagal memuat data:', error);
-        showToast('Gagal terhubung ke database. Periksa koneksi atau URL API.', 'error');
+        console.error("Error load data:", error);
+        // FALLBACK: Gunakan data lokal agar aplikasi tetap bisa dipakai saat offline/error API
+        state.usersList = INITIAL_DATA_USERS;
+        showToast('Mode Offline: Menggunakan data lokal. Periksa koneksi API.', 'error');
+        renderApp();
     }
 }
 
@@ -187,15 +201,6 @@ function showToast(message, type = 'success') {
     setTimeout(() => toast.remove(), 4000);
 }
 
-function addAuditLog(activity) {
-    state.logActivities.unshift({
-        id: Date.now(),
-        user: state.user ? state.user.username : 'Sistem',
-        aktivitas: activity,
-        tanggal: new Date().toISOString().replace('T', ' ').substring(0, 19)
-    });
-}
-
 function calculateAge(birthdate) {
     if (!birthdate) return '-';
     const birth = new Date(birthdate);
@@ -243,8 +248,10 @@ document.getElementById('login-form').addEventListener('submit', (e) => {
         return;
     }
 
+            // Cari user dengan validasi yang lebih ketat dan aman terhadap tipe data
     const foundUser = state.usersList.find(u => 
-        u.username.toLowerCase() === username.toLowerCase() && u.status === 'Aktif'
+        u.username && String(u.username).toLowerCase().trim() === username.toLowerCase().trim() && 
+        u.status && String(u.status).toLowerCase().trim() === 'aktif'
     );
 
     if (!foundUser) {
@@ -259,7 +266,7 @@ document.getElementById('login-form').addEventListener('submit', (e) => {
         return;
     }
 
-    // ✅ LANGSUNG GUNAKAN ROLE DARI DATABASE, TIDAK PERLU PILIH MANUAL
+    // ✅ LANGSUNG GUNAKAN ROLE DARI DATABASE
     state.user = { ...foundUser, actualRole: foundUser.role };
     
     errorEl.classList.add('hidden');
@@ -1260,5 +1267,5 @@ function initMobileMenu() {
 // Initialize mobile menu
 initMobileMenu();
 
-// Initialize App
-renderApp();
+// Initialize App: Muat data dari Spreadsheet terlebih dahulu sebelum merender
+loadDatabaseFromSpreadsheet();
