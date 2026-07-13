@@ -462,7 +462,6 @@ input, select, textarea { font-family: inherit; }
 .logo-login {
     width: 5rem;
     height: 5rem;
-    max-width: 100%;
     object-fit: contain;
     display: block;
 }
