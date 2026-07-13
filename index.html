@@ -18,40 +18,38 @@
     <div id="login-screen" class="screen active">
         <div class="login-wrapper">
             <div class="login-header">
-    <div class="login-logo">
-        <img src="Images/logo_posyandu.png" alt="Logo" class="logo-login">
-    </div>
-    <h2 class="text-3xl font-black text-slate-800 mt-3">Posyandu <span class="text-emerald-600">Digital</span></h2>
-</div>
+                <div class="login-logo">
+                    <img src="images/logo_posyandu.png" alt="Logo Posyandu" class="logo-login">
+                </div>
+                <h2 class="text-3xl font-black text-slate-800 mt-3">Posyandu <span class="text-emerald-600">Digital</span></h2>
+            </div>
             <p class="text-center text-sm text-slate-500 mb-8">Sistem Informasi Pencatatan & Monitoring Pemeriksaan Kesehatan</p>
-            
+        
             <div class="card login-card">
                 <form id="login-form" class="space-y-6">
                     <div id="login-error" class="hidden bg-rose-50 border-l-4 border-rose-500 p-3 rounded-r-md text-sm text-rose-700 font-medium"></div>
+                
                     <div class="form-group">
                         <label class="form-label">Username</label>
                         <input type="text" id="login-username" class="form-input" placeholder="Masukkan username" required>
                     </div>
+                
                     <div class="form-group">
                         <label class="form-label">Password</label>
                         <input type="password" id="login-password" class="form-input" placeholder="Masukkan sandi Anda" required>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Pilih Peran (Role)</label>
-                        <div class="role-selector">
-                            <button type="button" class="role-btn active" data-role="Kader">Kader</button>
-                            <button type="button" class="role-btn" data-role="Admin">Admin</button>
-                        </div>
-                    </div>
+                
                     <button type="submit" class="btn btn-primary w-full">Masuk Aplikasi</button>
                 </form>
-                <div class="login-helper mt-6">
-                    <span class="font-bold text-slate-700 block mb-1">Panduan Cepat Akses Demo:</span>
-                    <ul class="text-xs text-slate-600 space-y-1">
-                        <li>Akun Admin: <code>admin</code> | Sandi: <code>apa saja</code></li>
-                        <li>Akun Kader: <code>kader</code> | Sandi: <code>apa saja</code></li>
-                    </ul>
+
+                <!-- ✅ COPYRIGHT DITAMBAHKAN DI SINI -->
+                <div class="mt-8 pt-6 border-t border-slate-100">
+                    <p class="text-center text-xs text-slate-400 font-medium">
+                        &copy; 2026 Posyandu Vanda 3. Hak Cipta Dilindungi.
+                     </p>
                 </div>
+                
+
             </div>
         </div>
     </div>
