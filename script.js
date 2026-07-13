@@ -61,25 +61,113 @@ const INITIAL_DATA = {
 };
 
 // Logo Posyandu
-const logo_posyandu = 'Images/logo_posyandu.png';
+const logo_posyandu = 'images/logo_posyandu.png';
 
 // ==========================================
-// 2. STATE MANAGEMENT
+// 1. KONFIGURASI API (GANTI DENGAN URL DEPLOYMENT ANDA)
 // ==========================================
+const API_URL = 'https://script.google.com/macros/s/AKfycby7KCcNQq2VhlDxzK6Dq-V_MkheIms0KKuJheW7ZoTFNoilFgc0fe-pQkYBv-GdGBpV/exec';
+
+// State awal masih kosong, akan diisi dari Spreadsheet
 const state = {
     user: null,
     currentMenu: 'dashboard',
-    usersList: [...INITIAL_DATA.users],
-    pesertaList: [...INITIAL_DATA.peserta],
-    pemeriksaanList: [...INITIAL_DATA.pemeriksaan],
-    jadwalList: [...INITIAL_DATA.jadwal],
-    logActivities: [...INITIAL_DATA.logs],
+    usersList: [],
+    pesertaList: [],
+    pemeriksaanList: [],
+    jadwalList: [],
+    logActivities: [],
     filters: {
         peserta: { search: '', kategori: 'Semua' },
         riwayat: { search: '', kategori: 'Semua', tanggal: '' },
         laporan: { kategori: 'Semua', tanggal: '' }
-    }
+    },
+    isLoading: true
 };
+
+// ==========================================
+// 2. FUNGSI INTEGRASI REAL-TIME
+// ==========================================
+
+// Ambil semua data dari Spreadsheet saat aplikasi dimuat
+async function loadDatabaseFromSpreadsheet() {
+    try {
+        showToast('Memuat data dari server...', 'info');
+        const response = await fetch(`${API_URL}?action=getAllData`);
+        const data = await response.json();
+        
+        state.usersList = data.users || [];
+        state.pesertaList = data.peserta || [];
+        state.pemeriksaanList = data.pemeriksaan || [];
+        state.jadwalList = data.jadwal || [];
+        state.logActivities = data.logs || [];
+        
+        state.isLoading = false;
+        renderApp(); // Render ulang setelah data siap
+        showToast('Data berhasil dimuat!', 'success');
+    } catch (error) {
+        console.error('Gagal memuat data:', error);
+        showToast('Gagal terhubung ke database. Periksa koneksi atau URL API.', 'error');
+    }
+}
+
+// Kirim data baru ke Spreadsheet (Contoh: Tambah Peserta)
+async function syncAddPeserta(dataPeserta) {
+    try {
+        showToast('Menyimpan ke database...', 'info');
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'addPeserta',
+                ...dataPeserta
+            })
+        });
+        const result = await response.json();
+        if (result.status === 'success') {
+            // Update state lokal agar UI langsung berubah (Optimistic UI)
+            state.pesertaList.push(dataPeserta);
+            showToast(result.message, 'success');
+            return true;
+        } else {
+            showToast('Gagal: ' + result.message, 'error');
+            return false;
+        }
+    } catch (error) {
+        showToast('Error koneksi database', 'error');
+        return false;
+    }
+}
+
+// Kirim Log Aktivitas ke Spreadsheet
+async function syncAddLog(aktivitas) {
+    // Fire and forget (tidak perlu menunggu respon agar tidak memperlambat UI)
+    fetch(API_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: 'addLog',
+            user: state.user ? state.user.username : 'Sistem',
+            aktivitas: aktivitas,
+            tanggal: new Date().toISOString().replace('T', ' ').substring(0, 19)
+        })
+    }).catch(err => console.error('Log gagal terkirim', err));
+}
+
+// ==========================================
+// 3. MODIFIKASI FUNGSI YANG ADA
+// ==========================================
+
+// Ubah fungsi addAuditLog lama menjadi ini:
+function addAuditLog(activity) {
+    // Tambahkan ke state lokal dulu agar UI langsung update
+    state.logActivities.unshift({
+        id: Date.now(),
+        user: state.user ? state.user.username : 'Sistem',
+        aktivitas: activity,
+        tanggal: new Date().toISOString().replace('T', ' ').substring(0, 19)
+    });
+    // Kirim ke spreadsheet di background
+    syncAddLog(activity);
+}
 
 // ==========================================
 // 3. UTILITY FUNCTIONS
@@ -150,7 +238,7 @@ document.getElementById('login-form').addEventListener('submit', (e) => {
     const errorEl = document.getElementById('login-error');
 
     if (!username || !password) {
-        errorEl.textContent = 'Username dan password wajib di isi.';
+        errorEl.textContent = 'Username dan password wajib diisi.';
         errorEl.classList.remove('hidden');
         return;
     }
@@ -166,7 +254,7 @@ document.getElementById('login-form').addEventListener('submit', (e) => {
     }
 
     if (foundUser.password !== password) {
-        errorEl.textContent = 'Password salah ! Silahkan coba lagi.';
+        errorEl.textContent = 'Password salah! Silakan coba lagi.';
         errorEl.classList.remove('hidden');
         return;
     }
@@ -744,32 +832,93 @@ function openPesertaModal(id = null) {
         </form>
     `;
     openModal(html);
-    document.getElementById('form-peserta').onsubmit = (e) => {
-        e.preventDefault();
-        const data = {
-            nik: document.getElementById('p-nik').value,
-            no_kk: document.getElementById('p-kk').value,
-            nama: document.getElementById('p-nama').value,
-            kategori: document.getElementById('p-kat').value,
-            jenis_kelamin: document.getElementById('p-gender').value,
-            tanggal_lahir: document.getElementById('p-tgl').value,
-            no_hp: document.getElementById('p-hp').value,
-            alamat: document.getElementById('p-alamat').value
-        };
-        if (data.nik.length !== 16 || data.no_kk.length !== 16) return showToast('NIK dan KK harus 16 digit!', 'error');
-        
+    document.getElementById('form-peserta').onsubmit = async (e) => {
+    e.preventDefault();
+    
+    const nik = document.getElementById('p-nik').value.trim();
+    const kk = document.getElementById('p-kk').value.trim();
+    
+    // 1. Validasi
+    if (nik.length !== 16 || kk.length !== 16) {
+        return showToast('NIK dan No. KK harus 16 digit!', 'error');
+    }
+
+    const data = {
+        nik: nik,
+        no_kk: kk,
+        nama: document.getElementById('p-nama').value.trim(),
+        kategori: document.getElementById('p-kat').value,
+        jenis_kelamin: document.getElementById('p-gender').value,
+        tanggal_lahir: document.getElementById('p-tgl').value,
+        no_hp: document.getElementById('p-hp').value.trim(),
+        alamat: document.getElementById('p-alamat').value.trim()
+    };
+
+    // 2. UI Loading State (Mencegah double click)
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.innerText;
+    submitBtn.innerText = 'Menyimpan ke Database...';
+    submitBtn.disabled = true;
+
+    try {
         if (p) {
-            Object.assign(p, data);
-            addAuditLog(`Update peserta: ${data.nama}`);
-            showToast('Data diperbarui!');
+            // --- MODE EDIT (UPDATE) ---
+            data.id = p.id;
+            data.no_registrasi = p.no_registrasi;
+            
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'updatePeserta', ...data })
+            });
+            const result = await response.json();
+            
+            if (result.status === 'success') {
+                // Update state lokal agar UI langsung berubah
+                const index = state.pesertaList.findIndex(x => x.id === p.id);
+                if (index !== -1) state.pesertaList[index] = { ...p, ...data };
+                
+                addAuditLog(`Update peserta: ${data.nama}`);
+                showToast('Data peserta berhasil diperbarui di Database!', 'success');
+            } else {
+                showToast('Gagal: ' + result.message, 'error');
+            }
         } else {
+            // --- MODE TAMBAH BARU (INSERT) ---
             const newId = `REG-${String(state.pesertaList.length + 1).padStart(3, '0')}`;
-            state.pesertaList.push({ id: newId, no_registrasi: newId, ...data });
-            addAuditLog(`Tambah peserta: ${data.nama}`);
-            showToast('Peserta baru ditambahkan!');
+            const payload = { 
+                action: 'addPeserta', 
+                id: newId, 
+                no_registrasi: newId, 
+                ...data 
+            };
+            
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            
+            if (result.status === 'success') {
+                // Update state lokal
+                state.pesertaList.push({ id: newId, no_registrasi: newId, ...data });
+                addAuditLog(`Tambah peserta: ${data.nama}`);
+                showToast('Peserta baru berhasil ditambahkan ke Database!', 'success');
+            } else {
+                showToast('Gagal: ' + result.message, 'error');
+            }
         }
+        
         closeModal();
         renderView();
+        
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Terjadi kesalahan koneksi ke database.', 'error');
+    } finally {
+        // Kembalikan tombol ke keadaan semula
+        submitBtn.innerText = originalBtnText;
+        submitBtn.disabled = false;
+    }
     };
 }
 
