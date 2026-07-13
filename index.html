@@ -35,13 +35,15 @@
                     </div>
                 
             <div class="form-group">
-                    <label class="form-label">Password</label>
-                    <div style="position: relative;">
-                        <input type="password" id="login-password" class="form-input" style="padding-right: 2.5rem;" placeholder="Masukkan sandi Anda" required>
-                        <button type="button" id="toggle-password" style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: var(--slate-400); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0.25rem; border-radius: 0.375rem;" aria-label="Lihat Password">
-                        </button>
-                    </div>
-            </div>
+    <label class="form-label">Password</label>
+    <!-- Wrapper Flexbox yang stabil di semua perangkat -->
+    <div class="password-wrapper">
+        <input type="password" id="login-password" class="form-input password-input" placeholder="Masukkan sandi Anda" required>
+        <button type="button" id="toggle-password" class="toggle-btn" aria-label="Lihat Password">
+            <!-- Ikon akan diisi otomatis oleh JavaScript -->
+        </button>
+    </div>
+</div>
                 
                     <button type="submit" class="btn btn-primary w-full">Masuk Aplikasi</button>
                 </form>
