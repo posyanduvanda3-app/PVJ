@@ -30,17 +30,18 @@
                     <div id="login-error" class="hidden bg-rose-50 border-l-4 border-rose-500 p-3 rounded-r-md text-sm text-rose-700 font-medium"></div>
                 
                     <div class="form-group">
-    <label class="form-label">Username</label>
-    <input type="text" id="login-username" class="form-input" placeholder="Masukkan username" required 
-           autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-</div>
-
-<div class="form-group">
+                        <label class="form-label">Username</label>
+                        <input type="text" id="login-username" class="form-input" placeholder="Masukkan username" required>
+                    </div>
+                
+                    <div class="form-group">
     <label class="form-label">Password</label>
+    <!-- Wrapper Flexbox yang stabil di semua perangkat -->
     <div class="password-wrapper">
-        <input type="password" id="login-password" class="form-input password-input" placeholder="Masukkan sandi Anda" required 
-               autocomplete="new-password"> <!-- Gunakan new-password agar tidak autofill password lama -->
-        <button type="button" id="toggle-password" class="toggle-btn" aria-label="Lihat Password"></button>
+        <input type="password" id="login-password" class="form-input password-input" placeholder="Masukkan sandi Anda" required>
+        <button type="button" id="toggle-password" class="toggle-btn" aria-label="Lihat Password">
+            <!-- Ikon akan diisi otomatis oleh JavaScript -->
+        </button>
     </div>
 </div>
                 
