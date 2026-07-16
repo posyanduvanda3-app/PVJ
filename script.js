@@ -40,15 +40,54 @@ const INITIAL_DATA = {
         }
     ],
 
-    peserta: [
-        { id: 'REG-001', no_registrasi: 'REG-001', nik: '3201020304050001', no_kk: '3201020304059999', nama: 'Alvaro Putra', tanggal_lahir: '2024-03-15', jenis_kelamin: 'Laki-laki', alamat: 'RT 02/RW 04', kategori: 'Balita', no_hp: '081234567890' },
-        { id: 'REG-002', no_registrasi: 'REG-002', nik: '3201020304050002', no_kk: '3201020304058888', nama: 'Siti Rahma', tanggal_lahir: '1998-08-20', jenis_kelamin: 'Perempuan', alamat: 'RT 01/RW 03', kategori: 'Ibu Hamil', no_hp: '082345678901' },
-        { id: 'REG-003', no_registrasi: 'REG-003', nik: '3201020304050003', no_kk: '3201020304057777', nama: 'Mbah Kromo', tanggal_lahir: '1955-11-12', jenis_kelamin: 'Laki-laki', alamat: 'RT 03/RW 04', kategori: 'Lansia', no_hp: '083456789012' }
+        peserta: [
+        { 
+            id: 'REG-001', 
+            no_registrasi: 'REG-001', 
+            nik: '3201020304050001', 
+            nama: 'Alvaro Putra', 
+            tanggal_lahir: '2024-03-15', 
+            jenis_kelamin: 'Laki-laki', 
+            alamat: 'Jl. Melati No. 10', 
+            rt: '002', 
+            rw: '004', 
+            kategori: 'Balita', 
+            no_hp: '081234567890',
+            nama_orang_tua: 'Budi Santoso' // <-- DITAMBAHKAN AGAR TAMPIL SAAT REFRESH
+        },
+        { 
+            id: 'REG-002', 
+            no_registrasi: 'REG-002', 
+            nik: '3201020304050002', 
+            nama: 'Siti Rahma', 
+            tanggal_lahir: '1998-08-20', 
+            jenis_kelamin: 'Perempuan', 
+            alamat: 'Jl. Anggrek No. 5', 
+            rt: '001', 
+            rw: '003', 
+            kategori: 'Ibu Hamil', 
+            no_hp: '082345678901',
+            nama_orang_tua: '' 
+        },
+        { 
+            id: 'REG-003', 
+            no_registrasi: 'REG-003', 
+            nik: '3201020304050003', 
+            nama: 'Mbah Kromo', 
+            tanggal_lahir: '1955-11-12', 
+            jenis_kelamin: 'Laki-laki', 
+            alamat: 'Jl. Kenanga No. 8', 
+            rt: '003', 
+            rw: '004', 
+            kategori: 'Lansia', 
+            no_hp: '083456789012',
+            nama_orang_tua: '' 
+        }
     ],
 
     pemeriksaan: [
-        { id: 'PEM-001', peserta_id: 'REG-001', nama_peserta: 'Alvaro Putra', kategori: 'Balita', tanggal: new Date().toISOString().split('T')[0], berat_badan: '12.5', tinggi_badan: '88', imt: '16.1', tekanan_darah: '90/60', suhu: '36.5', nadi: '98', pernapasan: '24', status_gizi: 'Sesuai / Baik', tinggi_menurut_umur: 'Normal', imunisasi: 'DPT-HB-Hib 3', vitamin_a: 'Ya', keluhan: 'Tidak ada', diagnosa: 'Pertumbuhan baik', tindakan: 'PMT Balita', petugas: 'Siti Aminah', rujukan: 'Tidak' },
-        { id: 'PEM-002', peserta_id: 'REG-002', nama_peserta: 'Siti Rahma', kategori: 'Ibu Hamil', tanggal: new Date().toISOString().split('T')[0], berat_badan: '62.4', tinggi_badan: '158', imt: '25.0', tekanan_darah: '110/70', suhu: '36.6', nadi: '84', pernapasan: '20', usia_kehamilan: '24 Minggu', tinggi_fundus: '22', lila: '26', tablet_tambah_darah: 'Ya', djj: '142', keluhan: 'Mual ringan', diagnosa: 'Kehamilan normal', tindakan: 'Konseling gizi', petugas: 'Siti Aminah', rujukan: 'Tidak' }
+        { id: 'PEM-001', peserta_id: 'REG-001', nama_peserta: 'Alvaro Putra', kategori: 'Balita', tanggal: new Date().toISOString().split('T')[0], berat_badan: '12.5', tinggi_badan: '88', imt: '16.1', tekanan_darah: '90/60', lingkar_perut: '52', lingkar_lengan_atas: '15', status_gizi: 'Sesuai / Baik', tinggi_menurut_umur: 'Normal', imunisasi: 'DPT-HB-Hib 3', vitamin_a: 'Ya', keluhan: 'Tidak ada', diagnosa: 'Pertumbuhan baik', tindakan: 'PMT Balita', petugas: 'Siti Aminah', rujukan: 'Tidak' },
+        { id: 'PEM-002', peserta_id: 'REG-002', nama_peserta: 'Siti Rahma', kategori: 'Ibu Hamil', tanggal: new Date().toISOString().split('T')[0], berat_badan: '62.4', tinggi_badan: '158', imt: '25.0', tekanan_darah: '110/70', lingkar_perut: '88', lingkar_lengan_atas: '26', usia_kehamilan: '24 Minggu', tinggi_fundus: '22', lila: '26', tablet_tambah_darah: 'Ya', djj: '142', keluhan: 'Mual ringan', diagnosa: 'Kehamilan normal', tindakan: 'Konseling gizi', petugas: 'Siti Aminah', rujukan: 'Tidak' }
     ],
 
     jadwal: [
@@ -559,7 +598,9 @@ function renderDashboard() {
 
 function renderPeserta() {
     const filtered = state.pesertaList.filter(p => {
-        const matchSearch = p.nama.toLowerCase().includes(state.filters.peserta.search.toLowerCase()) || p.nik.includes(state.filters.peserta.search);
+        const matchSearch = p.nama.toLowerCase().includes(state.filters.peserta.search.toLowerCase()) || 
+                            p.nik.includes(state.filters.peserta.search) ||
+                            (p.nama_orang_tua && p.nama_orang_tua.toLowerCase().includes(state.filters.peserta.search.toLowerCase()));
         const matchKat = state.filters.peserta.kategori === 'Semua' || p.kategori === state.filters.peserta.kategori;
         return matchSearch && matchKat;
     });
@@ -567,11 +608,13 @@ function renderPeserta() {
     return `
         <div class="card flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div class="filter-bar flex-1">
-                <input type="text" id="filter-peserta-search" class="form-input" placeholder="Cari Nama, NIK..." value="${state.filters.peserta.search}">
+                <input type="text" id="filter-peserta-search" class="form-input" placeholder="Cari Nama, NIK, atau Nama Ortu..." value="${state.filters.peserta.search}">
                 <select id="filter-peserta-kat" class="form-input" style="max-width: 12rem;">
                     <option value="Semua" ${state.filters.peserta.kategori === 'Semua' ? 'selected' : ''}>Semua Kategori</option>
-                    <option value="Balita" ${state.filters.peserta.kategori === 'Balita' ? 'selected' : ''}>Balita</option>
                     <option value="Ibu Hamil" ${state.filters.peserta.kategori === 'Ibu Hamil' ? 'selected' : ''}>Ibu Hamil</option>
+                    <option value="Balita" ${state.filters.peserta.kategori === 'Balita' ? 'selected' : ''}>Balita</option>
+                    <option value="Remaja" ${state.filters.peserta.kategori === 'Remaja' ? 'selected' : ''}>Remaja</option>
+                    <option value="Dewasa" ${state.filters.peserta.kategori === 'Dewasa' ? 'selected' : ''}>Dewasa</option>
                     <option value="Lansia" ${state.filters.peserta.kategori === 'Lansia' ? 'selected' : ''}>Lansia</option>
                 </select>
             </div>
@@ -579,14 +622,45 @@ function renderPeserta() {
         </div>
         <div class="card p-0 overflow-x-auto">
             <table class="data-table">
-                <thead><tr><th>No. Reg / NIK</th><th>Nama Lengkap</th><th>Kategori</th><th>Umur & Gender</th><th class="text-right">Aksi</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>No. Reg / NIK</th>
+                        <th>Nama Lengkap</th>
+                        <th>Kategori</th>
+                        <th>Umur & Gender</th>
+                        <th class="text-right">Aksi</th>
+                    </tr>
+                </thead>
                 <tbody>
                     ${filtered.length ? filtered.map(p => `
                         <tr>
-                            <td><span class="font-bold text-slate-800 block">${p.no_registrasi}</span><span class="text-xs text-slate-400 font-mono">NIK: ${p.nik}</span></td>
-                            <td class="font-bold text-slate-800">${p.nama}</td>
-                            <td><span class="badge ${p.kategori === 'Balita' ? 'badge-rose' : p.kategori === 'Ibu Hamil' ? 'badge-emerald' : 'badge-blue'}">${p.kategori}</span></td>
-                            <td><span class="block text-slate-800">${calculateAge(p.tanggal_lahir)}</span><span class="text-xs text-slate-400">${p.jenis_kelamin}</span></td>
+                            <td>
+                                <span class="font-bold text-slate-800 block">${p.no_registrasi}</span>
+                                <span class="text-xs text-slate-400 font-mono">NIK: ${p.nik}</span>
+                            </td>
+
+                            <td>
+                                <span class="font-bold text-slate-800 block">${p.nama}</span>
+                                ${p.kategori === 'Balita' && p.nama_orang_tua ? `
+                                <span class="inline-flex items-center gap-1 mt-1 text-xs text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                                    Ortu: <b>${p.nama_orang_tua}</b>
+                                </span>
+                                        ` : ''}
+                            </td>
+
+                            <td>
+                                <span class="badge ${
+                                    p.kategori === 'Balita' ? 'badge-rose' : 
+                                    p.kategori === 'Ibu Hamil' ? 'badge-emerald' : 
+                                    p.kategori === 'Lansia' ? 'badge-blue' : 
+                                    'badge-slate'
+                                }">${p.kategori}</span>
+                            </td>
+                            <td>
+                                <span class="block text-slate-800">${calculateAge(p.tanggal_lahir)}</span>
+                                <span class="text-xs text-slate-400">${p.jenis_kelamin}</span>
+                            </td>
                             <td class="text-right">
                                 <div class="action-btns">
                                     <button class="btn btn-secondary text-xs" data-action="periksa" data-id="${p.id}" ${isReadOnly() ? 'disabled' : ''}>Periksa</button>
@@ -616,10 +690,12 @@ function renderRiwayat() {
         <div class="card filter-bar">
             <input type="text" id="filter-riwayat-search" class="form-input" placeholder="Cari Nama Peserta..." value="${state.filters.riwayat.search}">
             <select id="filter-riwayat-kat" class="form-input" style="max-width: 12rem;">
-                <option value="Semua">Semua Kategori</option>
-                <option value="Balita" ${state.filters.riwayat.kategori === 'Balita' ? 'selected' : ''}>Balita</option>
-                <option value="Ibu Hamil" ${state.filters.riwayat.kategori === 'Ibu Hamil' ? 'selected' : ''}>Ibu Hamil</option>
-                <option value="Lansia" ${state.filters.riwayat.kategori === 'Lansia' ? 'selected' : ''}>Lansia</option>
+             <option value="Semua">Semua Kategori</option>
+             <option value="Ibu Hamil" ${state.filters.riwayat.kategori === 'Ibu Hamil' ? 'selected' : ''}>Ibu Hamil</option>
+             <option value="Balita" ${state.filters.riwayat.kategori === 'Balita' ? 'selected' : ''}>Balita</option>
+             <option value="Remaja" ${state.filters.riwayat.kategori === 'Remaja' ? 'selected' : ''}>Remaja</option>
+             <option value="Dewasa" ${state.filters.riwayat.kategori === 'Dewasa' ? 'selected' : ''}>Dewasa</option>
+             <option value="Lansia" ${state.filters.riwayat.kategori === 'Lansia' ? 'selected' : ''}>Lansia</option>    
             </select>
             <input type="date" id="filter-riwayat-tgl" class="form-input" style="max-width: 12rem;" value="${state.filters.riwayat.tanggal}">
         </div>
@@ -636,7 +712,13 @@ function renderRiwayat() {
                             <td><span class="font-bold text-slate-800 block">${new Date(p.tanggal).toLocaleDateString('id-ID')}</span><span class="text-xs text-slate-400 font-mono">${p.id}</span></td>
                             <td><span class="font-bold text-slate-800 block">${p.nama_peserta}</span><span class="text-xs text-slate-400">${p.peserta_id}</span></td>
                             <td><span class="badge ${p.kategori === 'Balita' ? 'badge-rose' : p.kategori === 'Ibu Hamil' ? 'badge-emerald' : 'badge-blue'}">${p.kategori}</span></td>
-                            <td class="text-xs space-y-1"><div>BB: <b>${p.berat_badan} kg</b></div><div>TB: <b>${p.tinggi_badan} cm</b></div>${p.tekanan_darah ? `<div>TD: <b>${p.tekanan_darah}</b></div>` : ''}</td>
+                            <td class="text-xs space-y-1">
+                                <div>BB: <b>${p.berat_badan} kg</b></div>
+                                <div>TB: <b>${p.tinggi_badan} cm</b></div>
+                                ${p.tekanan_darah ? `<div>TD: <b>${p.tekanan_darah}</b></div>` : ''}
+                                ${p.lingkar_perut ? `<div>L.Perut: <b>${p.lingkar_perut} cm</b></div>` : ''}
+                                ${p.lingkar_lengan_atas ? `<div>LiLA: <b>${p.lingkar_lengan_atas} cm</b></div>` : ''}
+                            </td>
                             <td><span class="font-bold text-slate-800 block truncate max-w-xs">${p.diagnosa}</span></td>
                             <td class="text-right">
                                 <div class="action-btns">
@@ -665,7 +747,15 @@ function renderLaporan() {
     return `
         <div class="card flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div class="filter-bar">
-                <div class="form-group"><label class="form-label">Kategori</label><select id="filter-laporan-kat" class="form-input" style="width: 12rem;"><option value="Semua">Semua</option><option value="Balita" ${state.filters.laporan.kategori === 'Balita' ? 'selected' : ''}>Balita</option><option value="Ibu Hamil" ${state.filters.laporan.kategori === 'Ibu Hamil' ? 'selected' : ''}>Ibu Hamil</option><option value="Lansia" ${state.filters.laporan.kategori === 'Lansia' ? 'selected' : ''}>Lansia</option></select></div>
+                <div class="form-group"><label class="form-label">Kategori</label>
+                <select id="filter-laporan-kat" class="form-input" style="width: 12rem;">
+                    <option value="Semua">Semua</option>
+                   <option value="Ibu Hamil" ${state.filters.laporan.kategori === 'Ibu Hamil' ? 'selected' : ''}>Ibu Hamil</option>
+                    <option value="Balita" ${state.filters.laporan.kategori === 'Balita' ? 'selected' : ''}>Balita</option>
+                    <option value="Remaja" ${state.filters.laporan.kategori === 'Remaja' ? 'selected' : ''}>Remaja</option>
+                    <option value="Dewasa" ${state.filters.laporan.kategori === 'Dewasa' ? 'selected' : ''}>Dewasa</option>
+                    <option value="Lansia" ${state.filters.laporan.kategori === 'Lansia' ? 'selected' : ''}>Lansia</option>   
+                </select></div>
                 <div class="form-group"><label class="form-label">Bulan</label><input type="month" id="filter-laporan-tgl" class="form-input" style="width: 12rem;" value="${state.filters.laporan.tanggal}"></div>
             </div>
             <div class="flex gap-2">
@@ -812,120 +902,202 @@ function attachViewEvents() {
     };
 }
 
-// --- PESERTA MODAL ---
+// --- PESERTA MODAL (DAFTAR & UBAH DATA) ---
 function openPesertaModal(id = null) {
     const p = id ? state.pesertaList.find(x => x.id === id) : null;
+    const initialKat = p ? p.kategori : 'Ibu Hamil'; // Default diubah ke urutan pertama
+    const showOrtu = initialKat === 'Balita';
+    
     const html = `
-        <div class="modal-header"><h3 class="text-lg font-black text-slate-800">${p ? 'Ubah' : 'Daftarkan'} Peserta</h3><button class="btn-icon" onclick="closeModal()">${icons.close}</button></div>
-        <form id="form-peserta" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
-            <div class="modal-body" style="flex: 1; overflow-y: auto;">
-                <div class="form-group"><label class="form-label">NIK (16 Digit)</label><input type="text" id="p-nik" class="form-input" maxlength="16" value="${p ? p.nik : ''}" required></div>
-                <div class="form-group"><label class="form-label">No. KK</label><input type="text" id="p-kk" class="form-input" maxlength="16" value="${p ? p.no_kk : ''}" required></div>
+        <div class="modal-header border-b border-slate-100">
+            <div>
+                <h3 class="text-lg font-black text-slate-800">${p ? 'Ubah Data' : 'Daftarkan'} Peserta</h3>
+                <p class="text-xs text-slate-400 mt-1">Lengkapi data di bawah ini dengan benar.</p>
             </div>
-            <div class="form-group"><label class="form-label">Nama Lengkap</label><input type="text" id="p-nama" class="form-input" value="${p ? p.nama : ''}" required></div>
-            <div class="grid grid-cols-2 gap-4">
-                <div class="form-group"><label class="form-label">Kategori</label><select id="p-kat" class="form-input"><option value="Balita" ${p?.kategori === 'Balita' ? 'selected' : ''}>Balita</option><option value="Ibu Hamil" ${p?.kategori === 'Ibu Hamil' ? 'selected' : ''}>Ibu Hamil</option><option value="Lansia" ${p?.kategori === 'Lansia' ? 'selected' : ''}>Lansia</option><option value="Remaja" ${p?.kategori === 'Remaja' ? 'selected' : ''}>Remaja</option><option value="Dewasa" ${p?.kategori === 'Dewasa' ? 'selected' : ''}>Dewasa</option></select></div>
-                <div class="form-group"><label class="form-label">Gender</label><select id="p-gender" class="form-input"><option value="Laki-laki" ${p?.jenis_kelamin === 'Laki-laki' ? 'selected' : ''}>Laki-laki</option><option value="Perempuan" ${p?.jenis_kelamin === 'Perempuan' ? 'selected' : ''}>Perempuan</option></select></div>
+            <button class="btn-icon" onclick="closeModal()">${icons.close}</button>
+        </div>
+        
+        <form id="form-peserta" class="modal-body" style="flex: 1; overflow-y: auto;">
+            
+            <!-- BAGIAN A: IDENTITAS UTAMA -->
+            <span class="section-title text-slate-500 mb-3">A. IDENTITAS UTAMA</span>
+            <div class="space-y-4 mb-6">
+                <div class="form-group">
+                    <label class="form-label">NIK (16 Digit)</label>
+                    <input type="text" id="p-nik" class="form-input" maxlength="16" value="${p ? p.nik : ''}" required placeholder="Contoh: 3201020304050001">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nama Lengkap Peserta</label>
+                    <input type="text" id="p-nama" class="form-input" value="${p ? p.nama : ''}" required placeholder="Sesuai KTP / Akta Kelahiran">
+                </div>
+                
+                <!-- KOLOM NAMA ORANG TUA: Hanya muncul untuk kategori Balita -->
+                <div class="form-group" id="group-ortu" style="display: ${showOrtu ? 'flex' : 'none'};">
+                    <label class="form-label">Nama Orang Tua / Wali <span class="text-rose-500">*</span></label>
+                    <input type="text" id="p-ortu" class="form-input" value="${p ? (p.nama_orang_tua || '') : ''}" placeholder="Nama Ayah / Ibu">
+                    <p class="text-xs text-rose-500 mt-1 font-semibold">Wajib diisi khusus untuk kategori Balita.</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="form-group">
+                        <label class="form-label">Kategori</label>
+                        <!-- URUTAN KATEGORI DIUBAH DI SINI -->
+                        <select id="p-kat" class="form-input">
+                            <option value="Ibu Hamil" ${initialKat === 'Ibu Hamil' ? 'selected' : ''}>Ibu Hamil</option>
+                            <option value="Balita" ${initialKat === 'Balita' ? 'selected' : ''}>Balita</option>
+                            <option value="Remaja" ${initialKat === 'Remaja' ? 'selected' : ''}>Remaja</option>
+                            <option value="Dewasa" ${initialKat === 'Dewasa' ? 'selected' : ''}>Dewasa</option>
+                            <option value="Lansia" ${initialKat === 'Lansia' ? 'selected' : ''}>Lansia</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Jenis Kelamin</label>
+                        <select id="p-gender" class="form-input">
+                            <option value="Laki-laki" ${p?.jenis_kelamin === 'Laki-laki' ? 'selected' : ''}>Laki-laki</option>
+                            <option value="Perempuan" ${p?.jenis_kelamin === 'Perempuan' ? 'selected' : ''}>Perempuan</option>
+                        </select>
+                    </div>
+                </div>
             </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div class="form-group"><label class="form-label">Tanggal Lahir</label><input type="date" id="p-tgl" class="form-input" value="${p ? p.tanggal_lahir : ''}" required></div>
-                <div class="form-group"><label class="form-label">No. HP</label><input type="text" id="p-hp" class="form-input" value="${p ? p.no_hp : ''}"></div>
+
+            <!-- BAGIAN B: INFORMASI TAMBAHAN -->
+            <span class="section-title text-slate-500 mb-3">B. INFORMASI TAMBAHAN</span>
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="form-group">
+                    <label class="form-label">Tanggal Lahir</label>
+                    <input type="date" id="p-tgl" class="form-input" value="${p ? p.tanggal_lahir : ''}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">No. HP / WhatsApp</label>
+                    <input type="text" id="p-hp" class="form-input" value="${p ? p.no_hp : ''}" placeholder="08xxxxxxxxxx">
+                </div>
             </div>
-            <div class="form-group"><label class="form-label">Alamat</label><textarea id="p-alamat" class="form-input" rows="2">${p ? p.alamat : ''}</textarea></div>
-            <div class="modal-footer">
+
+            <!-- BAGIAN C: ALAMAT DOMISILI -->
+            <span class="section-title text-slate-500 mb-3">C. ALAMAT DOMISILI</span>
+            <div class="space-y-4">
+                <div class="form-group">
+                    <label class="form-label">Alamat Lengkap</label>
+                    <textarea id="p-alamat" class="form-input" rows="2" placeholder="Nama Jalan, Gang, No. Rumah">${p ? p.alamat : ''}</textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="form-group">
+                        <label class="form-label">RT</label>
+                        <input type="text" id="p-rt" class="form-input" value="${p ? (p.rt || '') : ''}" placeholder="001" maxlength="3">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">RW</label>
+                        <input type="text" id="p-rw" class="form-input" value="${p ? (p.rw || '') : ''}" placeholder="001" maxlength="3">
+                    </div>
+                </div>
+            </div>
+
+            <!-- FOOTER FORM (Sticky di bawah) -->
+            <div class="modal-footer -mx-6 -mb-6 mt-8 pt-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl sticky bottom-0">
                 <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
-                <button type="submit" class="btn btn-primary">Simpan</button>
+                <button type="submit" class="btn btn-primary">Simpan Data</button>
             </div>
         </form>
     `;
+    
     openModal(html);
-    document.getElementById('form-peserta').onsubmit = async (e) => {
-    e.preventDefault();
-    
-    const nik = document.getElementById('p-nik').value.trim();
-    const kk = document.getElementById('p-kk').value.trim();
-    
-    // 1. Validasi
-    if (nik.length !== 16 || kk.length !== 16) {
-        return showToast('NIK dan No. KK harus 16 digit!', 'error');
-    }
 
-    const data = {
-        nik: nik,
-        no_kk: kk,
-        nama: document.getElementById('p-nama').value.trim(),
-        kategori: document.getElementById('p-kat').value,
-        jenis_kelamin: document.getElementById('p-gender').value,
-        tanggal_lahir: document.getElementById('p-tgl').value,
-        no_hp: document.getElementById('p-hp').value.trim(),
-        alamat: document.getElementById('p-alamat').value.trim()
-    };
+    // --- LOGIKA DINAMIS: Tampilkan/Sembunyikan Nama Orang Tua berdasarkan Kategori ---
+    const katSelect = document.getElementById('p-kat');
+    const groupOrtu = document.getElementById('group-ortu');
+    const inputOrtu = document.getElementById('p-ortu');
 
-    // 2. UI Loading State (Mencegah double click)
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    const originalBtnText = submitBtn.innerText;
-    submitBtn.innerText = 'Menyimpan ke Database...';
-    submitBtn.disabled = true;
-
-    try {
-        if (p) {
-            // --- MODE EDIT (UPDATE) ---
-            data.id = p.id;
-            data.no_registrasi = p.no_registrasi;
-            
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'updatePeserta', ...data })
-            });
-            const result = await response.json();
-            
-            if (result.status === 'success') {
-                // Update state lokal agar UI langsung berubah
-                const index = state.pesertaList.findIndex(x => x.id === p.id);
-                if (index !== -1) state.pesertaList[index] = { ...p, ...data };
-                
-                addAuditLog(`Update peserta: ${data.nama}`);
-                showToast('Data peserta berhasil diperbarui di Database!', 'success');
-            } else {
-                showToast('Gagal: ' + result.message, 'error');
-            }
+    katSelect.addEventListener('change', function() {
+        if (this.value === 'Balita') {
+            groupOrtu.style.display = 'flex';
+            inputOrtu.setAttribute('required', 'required');
         } else {
-            // --- MODE TAMBAH BARU (INSERT) ---
-            const newId = `REG-${String(state.pesertaList.length + 1).padStart(3, '0')}`;
-            const payload = { 
-                action: 'addPeserta', 
-                id: newId, 
-                no_registrasi: newId, 
-                ...data 
-            };
-            
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-            const result = await response.json();
-            
-            if (result.status === 'success') {
-                // Update state lokal
-                state.pesertaList.push({ id: newId, no_registrasi: newId, ...data });
-                addAuditLog(`Tambah peserta: ${data.nama}`);
-                showToast('Peserta baru berhasil ditambahkan ke Database!', 'success');
-            } else {
-                showToast('Gagal: ' + result.message, 'error');
-            }
+            groupOrtu.style.display = 'none';
+            inputOrtu.removeAttribute('required');
+            inputOrtu.value = ''; // Kosongkan nilai agar tidak tersimpan sebagai data sampah
         }
+    });
+
+    // --- LOGIKA PENYIMPANAN DATA ---
+    document.getElementById('form-peserta').onsubmit = async (e) => {
+        e.preventDefault();
         
-        closeModal();
-        renderView();
+        const nik = document.getElementById('p-nik').value.trim();
+        const namaOrtu = document.getElementById('p-ortu').value.trim();
+        const kategori = document.getElementById('p-kat').value;
         
-    } catch (error) {
-        console.error('Error:', error);
-        showToast('Terjadi kesalahan koneksi ke database.', 'error');
-    } finally {
-        // Kembalikan tombol ke keadaan semula
-        submitBtn.innerText = originalBtnText;
-        submitBtn.disabled = false;
-    }
+        if (nik.length !== 16) {
+            return showToast('NIK harus terdiri dari 16 digit!', 'error');
+        }
+
+        if (kategori === 'Balita' && !namaOrtu) {
+            return showToast('Nama Orang Tua/Wali wajib diisi untuk kategori Balita!', 'error');
+        }
+
+        const data = {
+            nik: nik,
+            nama: document.getElementById('p-nama').value.trim(),
+            nama_orang_tua: kategori === 'Balita' ? namaOrtu : '', 
+            kategori: kategori,
+            jenis_kelamin: document.getElementById('p-gender').value,
+            tanggal_lahir: document.getElementById('p-tgl').value,
+            no_hp: document.getElementById('p-hp').value.trim(),
+            alamat: document.getElementById('p-alamat').value.trim(),
+            rt: document.getElementById('p-rt').value.trim(),
+            rw: document.getElementById('p-rw').value.trim()
+        };
+
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerText;
+        submitBtn.innerText = 'Menyimpan...';
+        submitBtn.disabled = true;
+
+        try {
+            if (p) {
+                data.id = p.id;
+                data.no_registrasi = p.no_registrasi;
+                
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'updatePeserta', ...data })
+                });
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    const index = state.pesertaList.findIndex(x => x.id === p.id);
+                    if (index !== -1) state.pesertaList[index] = { ...p, ...data };
+                    addAuditLog(`Update data peserta: ${data.nama}`);
+                    showToast('Data peserta berhasil diperbarui!', 'success');
+                } else {
+                    showToast('Gagal: ' + result.message, 'error');
+                }
+            } else {
+                const newId = `REG-${String(state.pesertaList.length + 1).padStart(3, '0')}`;
+                const payload = { action: 'addPeserta', id: newId, no_registrasi: newId, ...data };
+                
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    state.pesertaList.push({ id: newId, no_registrasi: newId, ...data });
+                    addAuditLog(`Tambah peserta baru: ${data.nama}`);
+                    showToast('Peserta baru berhasil didaftarkan!', 'success');
+                } else {
+                    showToast('Gagal: ' + result.message, 'error');
+                }
+            }
+            closeModal();
+            renderView();
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Terjadi kesalahan koneksi ke database.', 'error');
+        } finally {
+            submitBtn.innerText = originalBtnText;
+            submitBtn.disabled = false;
+        }
     };
 }
 
@@ -998,12 +1170,11 @@ function openPemeriksaanModal(pesertaId) {
                     <div class="form-group"><label class="form-label">BB (Kg)</label><input type="number" step="0.1" id="pem-bb" class="form-input" oninput="calcIMT()" required></div>
                     <div class="form-group"><label class="form-label">TB (Cm)</label><input type="number" step="0.1" id="pem-tb" class="form-input" oninput="calcIMT()" required></div>
                     <div class="form-group"><label class="form-label">IMT</label><input type="text" id="pem-imt" class="form-input bg-emerald-50 text-emerald-800 font-black" disabled placeholder="Otomatis"></div>
-                    <div class="form-group"><label class="form-label">Suhu (°C)</label><input type="number" step="0.1" id="pem-suhu" class="form-input" value="36.5"></div>
+                    <div class="form-group"><label class="form-label">Lingkar Perut (cm)</label><input type="number" step="0.1" id="pem-lingkar-perut" class="form-input" placeholder="Contoh: 78"></div>
                 </div>
-                <div class="grid grid-cols-3 gap-4">
+                <div class="grid grid-cols-2 gap-4">
                     <div class="form-group"><label class="form-label">Tekanan Darah</label><input type="text" id="pem-td" class="form-input" placeholder="120/80"></div>
-                    <div class="form-group"><label class="form-label">Nadi (/mnt)</label><input type="number" id="pem-nadi" class="form-input" value="80"></div>
-                    <div class="form-group"><label class="form-label">Pernapasan</label><input type="number" id="pem-napas" class="form-input" value="20"></div>
+                    <div class="form-group"><label class="form-label">Lingkar Lengan Atas / LiLA (cm)</label><input type="number" step="0.1" id="pem-lila" class="form-input" placeholder="Contoh: 26"></div>
                 </div>
             </div>
             ${specificFields}
@@ -1030,8 +1201,10 @@ function openPemeriksaanModal(pesertaId) {
             id: newId, peserta_id: peserta.id, nama_peserta: peserta.nama, kategori: peserta.kategori,
             tanggal: document.getElementById('pem-tgl').value,
             berat_badan: document.getElementById('pem-bb').value, tinggi_badan: document.getElementById('pem-tb').value,
-            imt: document.getElementById('pem-imt').value, suhu: document.getElementById('pem-suhu').value,
-            tekanan_darah: document.getElementById('pem-td').value, nadi: document.getElementById('pem-nadi').value, pernapasan: document.getElementById('pem-napas').value,
+            imt: document.getElementById('pem-imt').value,
+            tekanan_darah: document.getElementById('pem-td').value,
+            lingkar_perut: document.getElementById('pem-lingkar-perut').value,
+            lingkar_lengan_atas: document.getElementById('pem-lila').value,
             keluhan: document.getElementById('pem-keluhan').value, diagnosa: document.getElementById('pem-diagnosa').value,
             tindakan: document.getElementById('pem-tindakan').value, rujukan: document.getElementById('pem-rujukan').value,
             petugas: state.user.nama
@@ -1093,7 +1266,11 @@ function openDetailModal(id) {
             <div class="space-y-2 text-xs">
                 <span class="section-title">HASIL FISIK</span>
                 <div class="grid grid-cols-3 gap-3"><div class="border p-2 rounded-xl text-center"><span class="text-slate-400 block text-xs">BERAT</span><span class="font-black text-slate-800">${p.berat_badan} Kg</span></div><div class="border p-2 rounded-xl text-center"><span class="text-slate-400 block text-xs">TINGGI</span><span class="font-black text-slate-800">${p.tinggi_badan} Cm</span></div><div class="border p-2 rounded-xl text-center"><span class="text-slate-400 block text-xs">IMT</span><span class="font-black text-emerald-700">${p.imt || '-'}</span></div></div>
-                <div class="grid grid-cols-3 gap-2 pt-2"><div>TD: <b>${p.tekanan_darah || '-'}</b></div><div>Suhu: <b>${p.suhu || '-'} °C</b></div><div>Nadi: <b>${p.nadi || '-'}</b></div></div>
+                <div class="grid grid-cols-3 gap-2 pt-2">
+                    <div>TD: <b>${p.tekanan_darah || '-'}</b></div>
+                    <div>L. Perut: <b>${p.lingkar_perut || '-'} cm</b></div>
+                    <div>LiLA: <b>${p.lingkar_lengan_atas || '-'} cm</b></div>
+                </div>
             </div>
             ${specificDetail}
             <div class="border-t pt-3 text-xs space-y-2">
