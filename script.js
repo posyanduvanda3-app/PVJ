@@ -2,6 +2,9 @@
 // 1. ICONS & INITIAL DATA
 // ==========================================
 const icons = {
+     upload: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>`,
+    database: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>`,
+    map: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>`,
     users: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>`,
     clipboard: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>`,
     heart: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>`,
@@ -109,7 +112,7 @@ const logo_posyandu = 'Images/logo_posyandu.png';
 // ==========================================
 // 1. KONFIGURASI API (GANTI DENGAN URL DEPLOYMENT ANDA)
 // ==========================================
-const API_URL = 'https://script.google.com/macros/s/AKfycbz55Nd7J0XBsbAo6X80kI8FDpLwUVIkR4r61-X9bE87fYnr6iNE3P5PErVV0HowRd2-/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbytXOwEgU96ttCF9g5OMZxYAyi0-lgcWaerNUIWMQAmYz0O3jphRWM5J9Uc6UrUd3xC/exec';
 
 // State awal masih kosong, akan diisi dari Spreadsheet
 const state = {
@@ -258,7 +261,8 @@ function hasAccess(menu) {
     if (!state.user) return false;
     const role = state.user.actualRole || state.user.role;
     if (['dashboard', 'laporan', 'riwayat', 'data_peserta', 'pemeriksaan', 'jadwal'].includes(menu)) return true;
-    if (['user', 'logs'].includes(menu)) return role === 'Admin';
+    // ✅ 'master_data'
+    if (['user', 'logs', 'master_data'].includes(menu)) return role === 'Admin';
     return false;
 }
 
@@ -367,11 +371,14 @@ function renderSidebar() {
         { id: 'jadwal', label: 'Jadwal Posyandu', icon: icons.calendar }
     ];
 
-    let adminNav = '';
+       let adminNav = '';
     if (hasAccess('user')) {
         adminNav = `
             <div class="pt-4 border-t border-slate-800 mt-4 space-y-1">
-                <p class="px-4 text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Keamanan & Admin</p>
+                <p class="px-4 text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Administrasi Sistem</p>
+                
+                <!-- ✅ MENU MASTER DATA -->
+                <button class="nav-btn ${state.currentMenu === 'master_data' ? 'active' : ''}" data-menu="master_data">${icons.database} <span>Master Data</span></button>
                 <button class="nav-btn ${state.currentMenu === 'user' ? 'active' : ''}" data-menu="user">${icons.shield} <span>Manajemen User</span></button>
                 <button class="nav-btn ${state.currentMenu === 'logs' ? 'active' : ''}" data-menu="logs">${icons.clock} <span>Log Aktivitas</span></button>
             </div>
@@ -451,6 +458,7 @@ function renderView() {
         case 'riwayat': container.innerHTML = renderRiwayat(); break;
         case 'laporan': container.innerHTML = renderLaporan(); break;
         case 'jadwal': container.innerHTML = renderJadwal(); break;
+        case 'master_data': container.innerHTML = renderMasterData(); break; // ✅ BARU
         case 'user': container.innerHTML = renderUser(); break;
         case 'logs': container.innerHTML = renderLogs(); break;
     }
@@ -918,6 +926,12 @@ function attachViewEvents() {
         }
         else if (action === 'shortcut-riwayat') { state.currentMenu = 'riwayat'; renderApp(); }
         else if (action === 'shortcut-laporan') { state.currentMenu = 'laporan'; renderApp(); }
+
+        else if (action === 'manage-wilayah') showToast('Fitur Kelola Data Wilayah sedang dalam pengembangan.', 'info');
+        else if (action === 'import-massal') openImportMassalModal();
+        else if (action === 'backup-db') showToast('Mempersiapkan file backup database...', 'info');
+        else if (action === 'restore-db') showToast('Fitur Restore database sedang dalam pengembangan.', 'info');
+
     };
 }
 
@@ -1433,6 +1447,198 @@ function toggleUserStatus(id) {
 document.getElementById('modal-overlay').addEventListener('click', (e) => {
     if (e.target === document.getElementById('modal-overlay')) closeModal();
 });
+
+// ==========================================
+// MENU MASTER DATA (KHUSUS ADMIN)
+// ==========================================
+function renderMasterData() {
+    return `
+        <div class="card">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h4 class="text-xl font-black text-slate-800">Manajemen Master Data</h4>
+                    <p class="text-xs text-slate-400 mt-1">Kelola data referensi, import massal, dan backup database sistem.</p>
+                </div>
+                <span class="px-3 py-1 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full">ADMIN ONLY</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Card 1: Data Wilayah -->
+                <div class="p-6 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+                    <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-4">
+                        ${icons.map}
+                    </div>
+                    <h5 class="text-base font-bold text-slate-800 mb-1">Data Wilayah & Posyandu</h5>
+                    <p class="text-xs text-slate-500 mb-4">Kelola data referensi Provinsi, Kabupaten, Kecamatan, Puskesmas, Desa, dan Posyandu.</p>
+                    <button class="btn btn-secondary w-full text-xs" data-action="manage-wilayah">Kelola Data Wilayah</button>
+                </div>
+
+                <!-- Card 2: Import Massal (Sesuai format Excel Anda) -->
+                <div class="p-6 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+                    <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center mb-4">
+                        ${icons.upload}
+                    </div>
+                    <h5 class="text-base font-bold text-slate-800 mb-1">Import Data Peserta (Massal)</h5>
+                    <p class="text-xs text-slate-500 mb-4">Unggah file Excel/CSV (format Data Stats Gizi) untuk mendaftarkan peserta secara massal.</p>
+                    <button class="btn btn-primary w-full text-xs" data-action="import-massal">Mulai Import Data</button>
+                </div>
+
+                <!-- Card 3: Backup -->
+                <div class="p-6 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+                    <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center mb-4">
+                        ${icons.database}
+                    </div>
+                    <h5 class="text-base font-bold text-slate-800 mb-1">Backup & Restore Database</h5>
+                    <p class="text-xs text-slate-500 mb-4">Unduh cadangan database atau pulihkan data dari file backup sebelumnya.</p>
+                    <div class="flex gap-2">
+                        <button class="btn btn-secondary flex-1 text-xs" data-action="backup-db">Unduh Backup</button>
+                        <button class="btn btn-danger flex-1 text-xs" data-action="restore-db">Restore</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Box Keamanan -->
+        <div class="card bg-slate-50 border-dashed border-slate-200">
+            <div class="flex gap-3">
+                <div class="text-amber-500 mt-0.5">${icons.shield}</div>
+                <div>
+                    <h5 class="text-sm font-bold text-slate-800">Catatan Keamanan</h5>
+                    <p class="text-xs text-slate-600 mt-1">Menu Master Data hanya dapat diakses oleh pengguna dengan role <b>Admin</b>. Setiap aktivitas import, backup, atau perubahan data referensi akan dicatat dalam Log Aktivitas sistem.</p>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function openImportMassalModal() {
+    const html = `
+        <div class="modal-header">
+            <div>
+                <h3 class="text-lg font-black text-slate-800">Import Data Peserta Massal</h3>
+                <p class="text-xs text-slate-400 mt-1">Unggah file Excel (.xls/.xlsx) format Data Stats Gizi Balita.</p>
+            </div>
+            <button class="btn-icon" onclick="closeModal()">${icons.close}</button>
+        </div>
+        <form id="form-import" class="modal-body">
+            <div class="p-4 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-800 mb-4">
+                <b>Pastikan kolom Excel Anda memiliki header:</b><br>
+                NIK, Nama, Jenis_Kelamin, Tanggal_Lahir, BB Lahir, TB Lahir, Nama_Orang_Tua, RT, RW, Alamat.
+            </div>
+            
+            <div class="form-group mb-4">
+                <label class="form-label">Pilih File Data</label>
+                <input type="file" id="import-file" class="form-input" accept=".xls,.xlsx,.csv" required>
+            </div>
+
+            <div class="modal-footer -mx-6 -mb-6 mt-6 pt-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
+                <button type="submit" id="btn-proses-import" class="btn btn-primary">Proses Import</button>
+            </div>
+        </form>
+    `;
+    openModal(html);
+
+    document.getElementById('form-import').onsubmit = async (e) => {
+        e.preventDefault();
+        const fileInput = document.getElementById('import-file');
+        const file = fileInput.files[0];
+        const btn = document.getElementById('btn-proses-import');
+
+        if (!file) {
+            showToast('Silakan pilih file terlebih dahulu!', 'error');
+            return;
+        }
+
+        btn.innerText = 'Membaca file...';
+        btn.disabled = true;
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            try {
+                const data = new Uint8Array(event.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                
+                // Baca data sebagai JSON
+                const rawData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+                if (rawData.length === 0) {
+                    showToast('File Excel kosong atau format tidak sesuai!', 'error');
+                    btn.innerText = 'Proses Import';
+                    btn.disabled = false;
+                    return;
+                }
+
+                btn.innerText = 'Mengirim ke Database...';
+
+                // Peta kolom Excel ke format aplikasi kita
+                const mappedData = rawData.map((row, index) => {
+                    // Bersihkan NIK dari spasi atau karakter tersembunyi
+                    const nik = String(row['NIK'] || row['nik'] || '').replace(/\s/g, '');
+                    
+                    // Format Tanggal Lahir (menangani format tanggal Excel)
+                    let tglLahir = row['Tanggal_Lahir'] || row['tanggal_lahir'] || '';
+                    if (typeof tglLahir === 'number') {
+                        // Konversi tanggal Excel serial number ke YYYY-MM-DD
+                        const date = new Date(Math.round((tglLahir - 25569) * 86400 * 1000));
+                        tglLahir = date.toISOString().split('T')[0];
+                    }
+
+                    const jk = String(row['Jenis_Kelamin'] || row['jenis_kelamin'] || '').trim().toUpperCase();
+                    
+                    return {
+                        id: `REG-${Date.now()}-${index}`,
+                        no_registrasi: `REG-${Date.now()}-${index}`,
+                        nik: nik,
+                        nama: String(row['Nama'] || row['nama'] || '').trim(),
+                        nama_orang_tua: String(row['Nama_Orang_Tua'] || row['nama_orang_tua'] || '').trim(),
+                        tanggal_lahir: tglLahir,
+                        jenis_kelamin: (jk === 'L' || jk === 'LAKI-LAKI') ? 'Laki-laki' : 'Perempuan',
+                        bb_lahir: String(row['BB Lahir'] || row['bb_lahir'] || ''),
+                        tb_lahir: String(row['TB Lahir'] || row['tb_lahir'] || ''),
+                        rt: String(row['RT'] || row['rt'] || ''),
+                        rw: String(row['RW'] || row['rw'] || ''),
+                        alamat: String(row['Alamat'] || row['alamat'] || 'Data Wilayah'),
+                        kategori: 'Balita', // Default Balita sesuai nama file
+                        no_hp: ''
+                    };
+                });
+
+                // Kirim ke Google Apps Script
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'importMassalPeserta',
+                        records: mappedData
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    // Update state lokal
+                    state.pesertaList.push(...mappedData);
+                    addAuditLog(`Import massal ${mappedData.length} data peserta Balita`);
+                    showToast(`Berhasil! ${mappedData.length} data peserta ditambahkan.`, 'success');
+                    closeModal();
+                    renderView(); // Refresh tabel
+                } else {
+                    showToast('Gagal: ' + result.message, 'error');
+                }
+
+            } catch (error) {
+                console.error(error);
+                showToast('Terjadi kesalahan saat membaca file. Pastikan format sesuai.', 'error');
+            } finally {
+                btn.innerText = 'Proses Import';
+                btn.disabled = false;
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    };
+}
 
 // ==========================================
 // 8. MOBILE MENU TOGGLE
