@@ -956,7 +956,7 @@ function attachViewEvents() {
         if (action === 'goto') { state.currentMenu = btn.dataset.target; renderApp(); }
         else if (action === 'add-peserta') openPesertaModal();
         else if (action === 'edit-peserta') openPesertaModal(id);
-        else if (action === 'delete-peserta') deletePeserta(id, btn.dataset.nama);
+        else if (action === 'delete-peserta') openDeleteConfirmationModal(id, btn.dataset.nama);
         else if (action === 'periksa') openPemeriksaanModal(id);
         else if (action === 'detail-pem') openDetailModal(id);
         else if (action === 'cetak-pem') { openDetailModal(id); setTimeout(() => window.print(), 300); }
@@ -1157,7 +1157,7 @@ function openPesertaModal(id = null) {
                     const index = state.pesertaList.findIndex(x => x.id === p.id);
                     if (index !== -1) state.pesertaList[index] = { ...p, ...data };
                     addAuditLog(`Update data peserta: ${data.nama}`);
-                    showToast('Data peserta berhasil diperbarui!', 'success');
+                    showToast('Data peserta berhasil diperbarui !', 'success');
                 } else {
                     showToast('Gagal: ' + result.message, 'error');
                 }
@@ -1192,39 +1192,90 @@ function openPesertaModal(id = null) {
     };
 }
 
-async function deletePeserta(id, nama) {
-    if (confirm(`Hapus peserta "${nama}"?\n\n⚠️ Semua data riwayat pemeriksaan terkait juga akan dihapus permanen.`)) {
+// --- FUNGSI KONFIRMASI HAPUS PESERTA (PROFESIONAL) ---
+function openDeleteConfirmationModal(id, nama) {
+    const html = `
+        <div class="modal-header border-b border-slate-100">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0">
+                    ${icons.trash}
+                </div>
+                <div>
+                    <h3 class="text-lg font-black text-slate-800">Konfirmasi Penghapusan</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Tindakan ini tidak dapat dibatalkan.</p>
+                </div>
+            </div>
+            <button class="btn-icon" onclick="closeModal()">${icons.close}</button>
+        </div>
+        <div class="modal-body">
+            <p class="text-sm text-slate-600 mb-4 text-center sm:text-left">
+                Anda yakin ingin menghapus data peserta <b class="text-slate-800 text-base">"${nama}"</b>?
+            </p>
+            <div class="bg-rose-50 border border-rose-100 rounded-xl p-4 text-left">
+                <p class="text-xs font-bold text-rose-700 mb-1 flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                    PERINGATAN PENTING:
+                </p>
+                <p class="text-xs text-rose-600 leading-relaxed">
+                    Semua data <b>riwayat pemeriksaan medis</b> yang terkait dengan peserta ini akan <b>dihapus secara permanen</b> dari database dan tidak dapat dikembalikan.
+                </p>
+            </div>
+        </div>
+        <div class="modal-footer -mx-6 -mb-6 mt-4 pt-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl">
+            <button type="button" class="btn btn-secondary flex-1 sm:flex-none" onclick="closeModal()">Batal</button>
+            <button type="button" id="btn-confirm-delete" class="btn flex-1 sm:flex-none bg-rose-600 text-white hover:bg-rose-700 border-none shadow-md hover:shadow-lg transition-all">
+                Ya, Hapus Permanen
+            </button>
+        </div>
+    `;
+    
+    openModal(html);
+
+    // Logika eksekusi penghapusan
+    document.getElementById('btn-confirm-delete').onclick = async () => {
+        const btn = document.getElementById('btn-confirm-delete');
+        
+        // 1. Ubah tombol jadi state loading agar user tidak double-click
+        btn.disabled = true;
+        btn.innerHTML = `
+            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg> 
+            Memproses...
+        `;
+
         try {
-            showToast('Menghapus data dari database...', 'info');
-            
             const response = await fetch(API_URL, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'text/plain;charset=utf-8'
-                },
-                body: JSON.stringify({ 
-                    action: 'deletePeserta', 
-                    id: id 
-                })
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: 'deletePeserta', id: id })
             });
-            
             const result = await response.json();
-            
+
             if (result.status === 'success') {
-                // Hapus dari state lokal agar UI langsung update
+                // 2. Update state lokal secara optimistik
                 state.pesertaList = state.pesertaList.filter(p => p.id !== id);
                 state.pemeriksaanList = state.pemeriksaanList.filter(p => p.peserta_id !== id);
-                addAuditLog(`Hapus peserta: ${nama}`);
-                showToast(result.message, 'success');
+                
+                // 3. Catat log dan tampilkan notifikasi sukses yang jelas
+                addAuditLog(`Hapus permanen peserta: ${nama}`);
+                closeModal();
+                showToast(`Data "${nama}" dan seluruh riwayat medisnya berhasil dihapus permanen.`, 'success');
                 renderView();
             } else {
-                showToast('Gagal: ' + result.message, 'error');
+                showToast('Gagal menghapus: ' + result.message, 'error');
+                // Kembalikan tombol ke keadaan semula jika gagal
+                btn.disabled = false;
+                btn.innerHTML = 'Ya, Hapus Permanen';
             }
         } catch (error) {
             console.error('Error delete:', error);
-            showToast('Terjadi kesalahan koneksi ke database.', 'error');
+            showToast('Terjadi kesalahan koneksi ke database. Silakan coba lagi.', 'error');
+            btn.disabled = false;
+            btn.innerHTML = 'Ya, Hapus Permanen';
         }
-    }
+    };
 }
 
 // --- PEMERIKSAAN MODAL ---
