@@ -112,7 +112,7 @@ const logo_posyandu = 'Images/logo_posyandu.png';
 // ==========================================
 // 1. KONFIGURASI API (GANTI DENGAN URL DEPLOYMENT ANDA)
 // ==========================================
-const API_URL = 'https://script.google.com/macros/s/AKfycbw2_pF9TkcGvEcoOlWz74gXTQU-F6zyaEUKARkETimzNPVZtytmZzYbJGlg8tmcsQ7V/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbzcW6QQxfMZbq663iG-Ed8vsThXcJqt3vX0AnwQtbeo6jvci0qGjXZDguRR3_omfJBJ/exec';
 
 // State awal masih kosong, akan diisi dari Spreadsheet
 const state = {
@@ -1153,13 +1153,38 @@ function openPesertaModal(id = null) {
     };
 }
 
-function deletePeserta(id, nama) {
-    if (confirm(`Hapus peserta "${nama}"?`)) {
-        state.pesertaList = state.pesertaList.filter(p => p.id !== id);
-        state.pemeriksaanList = state.pemeriksaanList.filter(p => p.peserta_id !== id);
-        addAuditLog(`Hapus peserta: ${nama}`);
-        showToast('Data dihapus!');
-        renderView();
+async function deletePeserta(id, nama) {
+    if (confirm(`Hapus peserta "${nama}"?\n\n⚠️ Semua data riwayat pemeriksaan terkait juga akan dihapus permanen.`)) {
+        try {
+            showToast('Menghapus data dari database...', 'info');
+            
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/plain;charset=utf-8'
+                },
+                body: JSON.stringify({ 
+                    action: 'deletePeserta', 
+                    id: id 
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.status === 'success') {
+                // Hapus dari state lokal agar UI langsung update
+                state.pesertaList = state.pesertaList.filter(p => p.id !== id);
+                state.pemeriksaanList = state.pemeriksaanList.filter(p => p.peserta_id !== id);
+                addAuditLog(`Hapus peserta: ${nama}`);
+                showToast(result.message, 'success');
+                renderView();
+            } else {
+                showToast('Gagal: ' + result.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error delete:', error);
+            showToast('Terjadi kesalahan koneksi ke database.', 'error');
+        }
     }
 }
 
