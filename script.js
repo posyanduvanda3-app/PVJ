@@ -177,6 +177,9 @@ async function syncAddPeserta(dataPeserta) {
         showToast('Menyimpan ke database...', 'info');
         const response = await fetch(API_URL, {
             method: 'POST',
+            headers: {
+        'Content-Type': 'text/plain;charset=utf-8' // ⚠️ WAJIB DITAMBAHKAN
+            },
             body: JSON.stringify({
                 action: 'addPeserta',
                 ...dataPeserta
@@ -185,7 +188,7 @@ async function syncAddPeserta(dataPeserta) {
         const result = await response.json();
         if (result.status === 'success') {
             // Update state lokal agar UI langsung berubah (Optimistic UI)
-            state.pesertaList.push(dataPeserta);
+            state.pesertaList.unshift(dataPeserta);
             showToast(result.message, 'success');
             return true;
         } else {
@@ -203,6 +206,9 @@ async function syncAddLog(aktivitas) {
     // Fire and forget (tidak perlu menunggu respon agar tidak memperlambat UI)
     fetch(API_URL, {
         method: 'POST',
+        headers: {
+        'Content-Type': 'text/plain;charset=utf-8' // ⚠️ WAJIB DITAMBAHKAN
+        },
         body: JSON.stringify({
             action: 'addLog',
             user: state.user ? state.user.username : 'Sistem',
@@ -1102,6 +1108,9 @@ function openPesertaModal(id = null) {
                 data.no_registrasi = p.no_registrasi;
                 const response = await fetch(API_URL, {
                     method: 'POST',
+                    headers: {
+                      'Content-Type': 'text/plain;charset=utf-8' // ⚠️ WAJIB DITAMBAHKAN
+                    },
                     body: JSON.stringify({ action: 'updatePeserta', ...data })
                 });
                 const result = await response.json();
@@ -1116,10 +1125,17 @@ function openPesertaModal(id = null) {
             } else {
                 const newId = `REG-${String(state.pesertaList.length + 1).padStart(3, '0')}`;
                 const payload = { action: 'addPeserta', id: newId, no_registrasi: newId, ...data };
-                const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const response = await fetch(API_URL, { 
+                method: 'POST',
+                headers: {
+                'Content-Type': 'text/plain;charset=utf-8' // ⚠️ WAJIB DITAMBAHKAN
+                 },
+                body: JSON.stringify(payload) 
+                });
+
                 const result = await response.json();
                 if (result.status === 'success') {
-                    state.pesertaList.push({ id: newId, no_registrasi: newId, ...data });
+                    state.pesertaList.unshift({ id: newId, no_registrasi: newId, ...data });
                     addAuditLog(`Tambah peserta baru: ${data.nama}`);
                     showToast('Peserta baru berhasil didaftarkan!', 'success');
                 } else {
@@ -1580,7 +1596,7 @@ function openImportMassalModal() {
         const btn = document.getElementById('btn-proses-import');
 
         if (!file) {
-            showToast('Silakan pilih file terlebih dahulu!', 'error');
+            showToast('Silahkan pilih file terlebih dahulu !', 'error');
             return;
         }
 
@@ -1679,6 +1695,9 @@ function openImportMassalModal() {
                 // Kirim ke Google Apps Script
                 const response = await fetch(API_URL, {
                     method: 'POST',
+                    headers: {
+                     'Content-Type': 'text/plain;charset=utf-8' // ⚠️ WAJIB DITAMBAHKAN
+                     },
                     body: JSON.stringify({
                         action: 'importMassalPeserta',
                         records: mappedData
