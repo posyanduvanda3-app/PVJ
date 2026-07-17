@@ -861,34 +861,81 @@ code {
     }
 }
 
-/* Print Styles */
+/* ========================================== 
+   PRINT STYLES (HANYA MENCETAK REKAM MEDIS)
+   ========================================== */
 @media print {
-    .sidebar, 
-    .top-header, 
-    .modal-footer, 
-    .no-print, 
-    #toast-container,
-    .mobile-header,
-    .mobile-overlay { 
-        display: none !important; 
+    /* 1. TEKNIK PRINT MASKING: Paksa SEMUA elemen di layar menjadi TIDAK TERLIHAT */
+    body * {
+        visibility: hidden !important;
+    }
+
+    /* 2. HANYA IZINKAN ISI MODAL (REKAM MEDIS) YANG TERLIHAT */
+    .modal-body, .modal-body * {
+        visibility: visible !important;
+    }
+
+    /* 3. RESET LAYOUT MODAL AGAR MENYATU PENUH DENGAN KERTAS */
+    .modal-overlay {
+        position: absolute !important; /* Ubah dari fixed agar tidak mengunci layar */
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        height: auto !important; /* Hapus paksaan tinggi 100vh */
+        background: none !important;
+        backdrop-filter: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        display: block !important;
+    }
+
+    .modal-content {
+        box-shadow: none !important;
+        max-height: none !important; /* Hapus batas tinggi */
+        height: auto !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        border: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: block !important;
+    }
+
+    .modal-body {
+        padding: 0 !important;
+        margin: 0 !important;
+        display: block !important;
+        overflow: visible !important;
+        flex: none !important;
+        height: auto !important;
+    }
+
+    /* 4. SEMBUNYIKAN HEADER & FOOTER MODAL (Tombol Close, Cetak, dll) */
+    .modal-header, .modal-footer, .no-print {
+        display: none !important;
+    }
+
+    /* 5. ATUR MARGIN KERTAS AGAR RAPI DAN PROFESIONAL */
+    @page {
+        margin: 1.5cm;
+        size: A4;
+    }
+
+    /* 6. CEK & CEGAH PAGE BREAK DI TENGAH ELEMEN PENTING */
+    .bg-slate-50, .bg-rose-50, .bg-emerald-50, .bg-blue-50, 
+    .border, .p-4, .rounded-xl, .grid {
+        page-break-inside: avoid;
     }
     
-    .modal-overlay { 
-        position: static; 
-        background: none; 
-        backdrop-filter: none; 
-        padding: 0; 
+    /* 7. OPTIMASI WARNA & FONT UNTUK CETAKAN HITAM PUTIH / WARNA */
+    .modal-body {
+        color: #000 !important;
+        font-size: 11pt !important;
     }
     
-    .modal-content { 
-        box-shadow: none; 
-        max-height: none; 
-        max-width: none; 
-        border: none; 
-    }
-    
-    .main-content {
-        margin-top: 0;
+    /* Pastikan border tetap terlihat jelas saat dicetak */
+    .border, .border-b, .border-t {
+        border-color: #cbd5e1 !important; 
     }
 }
 
