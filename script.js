@@ -112,7 +112,7 @@ const logo_posyandu = 'Images/logo_posyandu.png';
 // ==========================================
 // 1. KONFIGURASI API (GANTI DENGAN URL DEPLOYMENT ANDA)
 // ==========================================
-const API_URL = 'https://script.google.com/macros/s/AKfycbzULgRI0WRyzAdmfF3TnRDgx-vhIkuZXDPRzeTfHrFDhQ_HNFLP9KMgAyQskLi2UWsD/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbw1mo6sU-0ez76Qnnl89ofhw7YTxSWnXnD7ICVIt06ojebjkThWHYFPb8rdblGgOKJD/exec';
 
 // State awal masih kosong, akan diisi dari Spreadsheet
 const state = {
@@ -130,6 +130,9 @@ const state = {
     },
     isLoading: true
 };
+
+// Variabel global untuk debounce pencarian agar tidak lag saat mengetik cepat
+let searchTimeout;
 
 // ==========================================
 // 2. FUNGSI INTEGRASI REAL-TIME
@@ -152,12 +155,14 @@ async function loadDatabaseFromSpreadsheet() {
         
         const data = await response.json();
         
-        // Pastikan data ada, jika kosong/gagal, gunakan INITIAL_DATA
-        state.usersList = (data.users && data.users.length > 0) ? data.users : INITIAL_DATA_USERS;
-        state.pesertaList = data.peserta || [];
-        state.pemeriksaanList = data.pemeriksaan || [];
-        state.jadwalList = data.jadwal || [];
-        state.logActivities = data.logs || [];
+             // Pastikan data ada, jika kosong/gagal, gunakan INITIAL_DATA
+     state.usersList = (data.users && data.users.length > 0) ? data.users : INITIAL_DATA_USERS;
+     
+     // ✅ TAMBAHKAN .reverse() agar data terbaru (paling bawah di sheet) muncul di paling atas UI
+     state.pesertaList = (data.peserta || []).reverse();
+     state.pemeriksaanList = (data.pemeriksaan || []).reverse();
+     state.jadwalList = (data.jadwal || []).reverse(); 
+     state.logActivities = (data.logs || []).reverse();
         
         console.log("Data berhasil dimuat:", state.usersList);
         renderApp(); 
@@ -615,23 +620,45 @@ function renderDashboard() {
 } 
 
 function renderPeserta() {
+    const searchVal = state.filters.peserta.search;
+    
+    // ✅ PENCARIAN PROFESIONAL: Gabungkan semua field menjadi satu string untuk pencocokan yang akurat
     const filtered = state.pesertaList.filter(p => {
-        const matchSearch = p.nama.toLowerCase().includes(state.filters.peserta.search.toLowerCase()) || 
-                            p.nik.includes(state.filters.peserta.search) ||
-                            (p.nama_orang_tua && p.nama_orang_tua.toLowerCase().includes(state.filters.peserta.search.toLowerCase()));
+        const searchableText = `${p.no_registrasi} ${p.nik} ${p.nama} ${p.nama_orang_tua || ''} ${p.alamat || ''} ${p.rt || ''} ${p.rw || ''} ${p.no_hp || ''}`.toLowerCase();
+        const matchSearch = !searchVal || searchableText.includes(searchVal);
         const matchKat = state.filters.peserta.kategori === 'Semua' || p.kategori === state.filters.peserta.kategori;
         return matchSearch && matchKat;
     });
 
-    // Cek apakah ada data Balita di hasil filter saat ini
     const hasBalita = filtered.some(p => p.kategori === 'Balita');
-    const totalColumns = hasBalita ? 6 : 5; // Jumlah kolom menyesuaikan
+    const totalColumns = hasBalita ? 6 : 5; 
 
     return `
         <div class="card flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div class="filter-bar flex-1">
-                <input type="text" id="filter-peserta-search" class="form-input" placeholder="Cari Nama, NIK, atau Nama Ortu..." value="${state.filters.peserta.search}">
-                <select id="filter-peserta-kat" class="form-input" style="max-width: 12rem;">
+            <div class="filter-bar flex-1 w-full md:w-auto">
+                
+                <!-- ⚠️ WRAPPER 'relative' INI WAJIB ADA agar ikon tetap di DALAM input -->
+                <div class="relative w-full md:max-w-md">
+                    <!-- 1. Ikon Kaca Pembesar (Kiri) -->
+                    <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    </div>
+                    
+                    <!-- 2. Input Field (Padding kanan dinamis agar teks tidak menabrak ikon hapus) -->
+                    <input type="text" id="filter-peserta-search" class="form-input" 
+                           style="padding-left: 2.5rem; padding-right: ${searchVal ? '2.5rem' : '0.75rem'};" 
+                           placeholder="Cari Nama, NIK, No. HP, atau Alamat..." 
+                           value="${searchVal}">
+                    
+                    <!-- 3. Tombol Hapus (Kanan, Hanya muncul jika ada teks) -->
+                    ${searchVal ? `
+                    <button type="button" id="clear-peserta-search" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 transition-colors z-10" title="Hapus Pencarian">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                    ` : ''}
+                </div>
+                
+                <select id="filter-peserta-kat" class="form-input mt-2 md:mt-0" style="max-width: 12rem;">
                     <option value="Semua" ${state.filters.peserta.kategori === 'Semua' ? 'selected' : ''}>Semua Kategori</option>
                     <option value="Ibu Hamil" ${state.filters.peserta.kategori === 'Ibu Hamil' ? 'selected' : ''}>Ibu Hamil</option>
                     <option value="Balita" ${state.filters.peserta.kategori === 'Balita' ? 'selected' : ''}>Balita</option>
@@ -640,8 +667,9 @@ function renderPeserta() {
                     <option value="Lansia" ${state.filters.peserta.kategori === 'Lansia' ? 'selected' : ''}>Lansia</option>
                 </select>
             </div>
-            ${!isReadOnly() ? `<button class="btn btn-primary" data-action="add-peserta">${icons.plus} Daftarkan Peserta</button>` : ''}
+            ${!isReadOnly() ? `<button class="btn btn-primary whitespace-nowrap" data-action="add-peserta">${icons.plus} Daftarkan Peserta</button>` : ''}
         </div>
+        
         <div class="card p-0 overflow-x-auto">
             <table class="data-table">
                 <thead>
@@ -649,7 +677,7 @@ function renderPeserta() {
                         <th>No. Reg / NIK</th>
                         <th>Nama Lengkap</th>
                         <th>Kategori</th>
-                        ${hasBalita ? '<th>BB / TB Lahir</th>' : ''} <!-- Kolom hanya muncul jika ada Balita -->
+                        ${hasBalita ? '<th>BB / TB Lahir</th>' : ''}
                         <th>Umur & Gender</th>
                         <th class="text-right">Aksi</th>
                     </tr>
@@ -670,15 +698,8 @@ function renderPeserta() {
                                 </span>` : ''}
                             </td>
                             <td>
-                                <span class="badge ${
-                                    p.kategori === 'Balita' ? 'badge-rose' : 
-                                    p.kategori === 'Ibu Hamil' ? 'badge-emerald' : 
-                                    p.kategori === 'Lansia' ? 'badge-blue' : 
-                                    'badge-slate'
-                                }">${p.kategori}</span>
+                                <span class="badge ${p.kategori === 'Balita' ? 'badge-rose' : p.kategori === 'Ibu Hamil' ? 'badge-emerald' : p.kategori === 'Lansia' ? 'badge-blue' : 'badge-slate'}">${p.kategori}</span>
                             </td>
-                            
-                            <!-- Data BB/TB Lahir: Hanya render cell ini jika kolom aktif -->
                             ${hasBalita ? `
                             <td>
                                 ${p.kategori === 'Balita' ? `
@@ -687,9 +708,7 @@ function renderPeserta() {
                                         <span class="block text-slate-700">TB: <b>${p.tb_lahir || '-'} cm</b></span>
                                     </div>
                                 ` : '<span class="text-xs text-slate-400 italic">-</span>'}
-                            </td>
-                            ` : ''}
-                            
+                            </td>` : ''}
                             <td>
                                 <span class="block text-slate-800">${calculateAge(p.tanggal_lahir)}</span>
                                 <span class="text-xs text-slate-400">${p.jenis_kelamin}</span>
@@ -704,7 +723,9 @@ function renderPeserta() {
                                 </div>
                             </td>
                         </tr>
-                    `).join('') : `<tr><td colspan="${totalColumns}" class="text-center text-slate-400 italic p-8">Tidak ada data.</td></tr>`}
+                    `).join('') : `<tr><td colspan="${totalColumns}" class="text-center text-slate-400 italic p-8">
+                        ${searchVal ? `Tidak ditemukan data yang cocok dengan "<b>${searchVal}</b>"` : 'Tidak ada data peserta.'}
+                    </td></tr>`}
                 </tbody>
             </table>
         </div>
@@ -889,9 +910,27 @@ function renderLogs() {
 // 7. EVENT HANDLERS & MODALS
 // ==========================================
 function attachViewEvents() {
-    // Filters
+    // --- FILTER PESERTA DENGAN DEBOUNCE ---
     const fPesertaSearch = document.getElementById('filter-peserta-search');
-    if (fPesertaSearch) fPesertaSearch.oninput = (e) => { state.filters.peserta.search = e.target.value; renderView(); };
+    if (fPesertaSearch) {
+        fPesertaSearch.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout); // Hapus timer sebelumnya jika user masih mengetik
+            searchTimeout = setTimeout(() => {
+                state.filters.peserta.search = e.target.value.trim().toLowerCase();
+                renderView();
+            }, 1200); // Tunggu 1200ms setelah user berhenti mengetik
+        });
+    }
+
+    // --- TOMBOL HAPUS PENCARIAN (CLEAR BUTTON) ---
+    const clearPesertaSearch = document.getElementById('clear-peserta-search');
+    if (clearPesertaSearch) {
+        clearPesertaSearch.addEventListener('click', () => {
+            state.filters.peserta.search = ''; // Kosongkan pencarian
+            renderView(); // Render ulang tabel
+        });
+    }
+
     const fPesertaKat = document.getElementById('filter-peserta-kat');
     if (fPesertaKat) fPesertaKat.onchange = (e) => { state.filters.peserta.kategori = e.target.value; renderView(); };
 
@@ -1286,44 +1325,65 @@ function openPemeriksaanModal(pesertaId) {
     `;
     openModal(html);
 
-    document.getElementById('form-pem').onsubmit = (e) => {
-        e.preventDefault();
-        const newId = `PEM-${String(state.pemeriksaanList.length + 1).padStart(3, '0')}`;
-        const record = {
-            id: newId, peserta_id: peserta.id, nama_peserta: peserta.nama, kategori: peserta.kategori,
-            tanggal: document.getElementById('pem-tgl').value,
-            berat_badan: document.getElementById('pem-bb').value, tinggi_badan: document.getElementById('pem-tb').value,
-            imt: document.getElementById('pem-imt').value,
-            tekanan_darah: document.getElementById('pem-td').value,
-            lingkar_perut: document.getElementById('pem-lingkar-perut').value,
-            lingkar_lengan_atas: document.getElementById('pem-lila').value,
-            keluhan: document.getElementById('pem-keluhan').value, diagnosa: document.getElementById('pem-diagnosa').value,
-            tindakan: document.getElementById('pem-tindakan').value, rujukan: document.getElementById('pem-rujukan').value,
-            petugas: state.user.nama
-        };
+    document.getElementById('form-pem').onsubmit = async (e) => {
+    e.preventDefault();
+    const newId = `PEM-${String(state.pemeriksaanList.length + 1).padStart(3, '0')}`;
+    const record = {
+        id: newId, peserta_id: peserta.id, nama_peserta: peserta.nama, kategori: peserta.kategori,
+        tanggal: document.getElementById('pem-tgl').value,
+        berat_badan: document.getElementById('pem-bb').value, tinggi_badan: document.getElementById('pem-tb').value,
+        imt: document.getElementById('pem-imt').value,
+        tekanan_darah: document.getElementById('pem-td').value,
+        lingkar_perut: document.getElementById('pem-lingkar-perut').value,
+        lingkar_lengan_atas: document.getElementById('pem-lila').value,
+        keluhan: document.getElementById('pem-keluhan').value, diagnosa: document.getElementById('pem-diagnosa').value,
+        tindakan: document.getElementById('pem-tindakan').value, rujukan: document.getElementById('pem-rujukan').value,
+        petugas: state.user.nama
+    };
+    if (peserta.kategori === 'Balita') {
+        record.status_gizi = document.getElementById('pem-status-gizi').value;
+        record.tinggi_menurut_umur = document.getElementById('pem-tinggi-umur').value;
+        record.imunisasi = document.getElementById('pem-imunisasi').value;
+    } else if (peserta.kategori === 'Ibu Hamil') {
+        record.usia_kehamilan = document.getElementById('pem-usia-hamil').value;
+        record.tinggi_fundus = document.getElementById('pem-fundus').value;
+        record.lila = document.getElementById('pem-lila').value;
+        record.djj = document.getElementById('pem-djj').value;
+    } else if (peserta.kategori === 'Lansia' || peserta.kategori === 'Dewasa') {
+        record.gula_darah = document.getElementById('pem-gula').value;
+        record.kolesterol = document.getElementById('pem-kol').value;
+        record.asam_urat = document.getElementById('pem-asam').value;
+        record.riwayat_penyakit = document.getElementById('pem-riwayat').value;
+    }
 
-        if (peserta.kategori === 'Balita') {
-            record.status_gizi = document.getElementById('pem-status-gizi').value;
-            record.tinggi_menurut_umur = document.getElementById('pem-tinggi-umur').value;
-            record.imunisasi = document.getElementById('pem-imunisasi').value;
-        } else if (peserta.kategori === 'Ibu Hamil') {
-            record.usia_kehamilan = document.getElementById('pem-usia-hamil').value;
-            record.tinggi_fundus = document.getElementById('pem-fundus').value;
-            record.lila = document.getElementById('pem-lila').value;
-            record.djj = document.getElementById('pem-djj').value;
-        } else if (peserta.kategori === 'Lansia') {
-            record.gula_darah = document.getElementById('pem-gula').value;
-            record.kolesterol = document.getElementById('pem-kol').value;
-            record.asam_urat = document.getElementById('pem-asam').value;
-            record.riwayat_penyakit = document.getElementById('pem-riwayat').value;
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.innerText = 'Menyimpan...';
+    submitBtn.disabled = true;
+
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'addPemeriksaan', ...record })
+        });
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            state.pemeriksaanList.unshift(record);
+            addAuditLog(`Input pemeriksaan: ${peserta.nama}`);
+            showToast('Pemeriksaan berhasil disimpan ke database!');
+            closeModal();
+            state.currentMenu = 'riwayat';
+            renderApp();
+        } else {
+            showToast('Gagal menyimpan: ' + result.message, 'error');
         }
-
-        state.pemeriksaanList.unshift(record);
-        addAuditLog(`Input pemeriksaan: ${peserta.nama}`);
-        showToast('Pemeriksaan disimpan!');
-        closeModal();
-        state.currentMenu = 'riwayat';
-        renderApp();
+        }   catch (error) {
+            showToast('Terjadi kesalahan koneksi ke database.', 'error');
+        }      finally {
+            submitBtn.innerText = 'Simpan Pemeriksaan';
+            submitBtn.disabled = false;
+        }
     };
 }
 
@@ -1389,28 +1449,67 @@ function openJadwalModal() {
         </form>
     `;
     openModal(html);
-    document.getElementById('form-jadwal').onsubmit = (e) => {
-        e.preventDefault();
-        state.jadwalList.push({
-            id: Date.now(),
-            tanggal: document.getElementById('j-tgl').value,
-            lokasi: document.getElementById('j-lok').value,
-            jam_mulai: document.getElementById('j-mulai').value,
-            jam_selesai: document.getElementById('j-selesai').value
+    document.getElementById('form-jadwal').onsubmit = async (e) => {
+    e.preventDefault();
+    const newJadwal = {
+        id: Date.now().toString(),
+        tanggal: document.getElementById('j-tgl').value,
+        lokasi: document.getElementById('j-lok').value,
+        jam_mulai: document.getElementById('j-mulai').value,
+        jam_selesai: document.getElementById('j-selesai').value
+    };
+    
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.innerText = 'Menyimpan...';
+    submitBtn.disabled = true;
+
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'addJadwal', ...newJadwal })
         });
-        addAuditLog('Terbitkan jadwal baru');
-        showToast('Jadwal diterbitkan!');
-        closeModal();
-        renderView();
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            state.jadwalList.unshift(newJadwal);
+            addAuditLog('Terbitkan jadwal baru');
+            showToast('Jadwal diterbitkan dan disimpan!');
+            closeModal();
+            renderView();
+        } else {
+            showToast('Gagal: ' + result.message, 'error');
+        }
+    } catch (error) {
+        showToast('Terjadi kesalahan koneksi ke database.', 'error');
+    }   finally {
+            submitBtn.innerText = 'Publikasikan';
+            submitBtn.disabled = false;
+        }
     };
 }
 
-function deleteJadwal(id) {
+async function deleteJadwal(id) {
     if (confirm('Hapus jadwal ini?')) {
-        state.jadwalList = state.jadwalList.filter(j => j.id != id);
-        addAuditLog('Hapus jadwal');
-        showToast('Jadwal dihapus.', 'info');
-        renderView();
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: 'deleteJadwal', id: id })
+            });
+            const result = await response.json();
+            
+            if (result.status === 'success') {
+                state.jadwalList = state.jadwalList.filter(j => String(j.id) !== String(id));
+                addAuditLog('Hapus jadwal');
+                showToast('Jadwal dihapus dari database.', 'info');
+                renderView();
+            } else {
+                showToast('Gagal: ' + result.message, 'error');
+            }
+        } catch (error) {
+            showToast('Terjadi kesalahan koneksi ke database.', 'error');
+        }
     }
 }
 
@@ -1462,40 +1561,78 @@ function openUserModal(id = null) {
     `;
     openModal(html);
     
-    document.getElementById('form-user').onsubmit = (e) => {
-        e.preventDefault();
-        const passwordInput = document.getElementById('u-pass').value;
-        
-        const data = { 
-            nama: document.getElementById('u-nama').value, 
-            username: document.getElementById('u-user').value, 
-            role: document.getElementById('u-role').value, 
-            status: document.getElementById('u-status').value 
-        };
-        
-        // ✅ Hanya update password jika diisi (untuk edit) atau wajib untuk user baru
-        if (u) {
-            Object.assign(u, data);
-            if (passwordInput) u.password = passwordInput; // Update password hanya jika diisi
-            showToast('User diperbarui!');
+    document.getElementById('form-user').onsubmit = async (e) => {
+    e.preventDefault();
+    const passwordInput = document.getElementById('u-pass').value;
+    const data = { 
+        id: u ? String(u.id) : Date.now().toString(),
+        nama: document.getElementById('u-nama').value, 
+        username: document.getElementById('u-user').value, 
+        role: document.getElementById('u-role').value, 
+        status: document.getElementById('u-status').value 
+    };
+    if (passwordInput) data.password = passwordInput;
+
+    const action = u ? 'updateUser' : 'addUser';
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.innerText = 'Menyimpan...';
+    submitBtn.disabled = true;
+
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action, ...data })
+        });
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            if (u) {
+                Object.assign(u, data);
+                if (!passwordInput) u.password = u.password; // Pertahankan password lama jika kosong
+                showToast('User diperbarui di database!');
+            } else {
+                state.usersList.push(data);
+                showToast('User baru ditambahkan ke database!');
+            }
+            addAuditLog(`${u ? 'Update' : 'Tambah'} user: ${data.username}`);
+            closeModal();
+            renderView();
         } else {
-            if (!passwordInput) return showToast('Password wajib diisi untuk user baru!', 'error');
-            state.usersList.push({ id: Date.now(), password: passwordInput, ...data });
-            showToast('User baru ditambahkan!');
+            showToast('Gagal: ' + result.message, 'error');
         }
-        addAuditLog(`Update user: ${data.username}`);
-        closeModal();
-        renderView();
+    } catch (error) {
+        showToast('Terjadi kesalahan koneksi ke database.', 'error');
+    }   finally {
+            submitBtn.innerText = 'Simpan';
+            submitBtn.disabled = false;
+        }
     };
 }
 
-function toggleUserStatus(id) {
-    const u = state.usersList.find(x => x.id == id);
+async function toggleUserStatus(id) {
+    const u = state.usersList.find(x => String(x.id) === String(id));
     if (u) {
-        u.status = u.status === 'Aktif' ? 'Nonaktif' : 'Aktif';
-        addAuditLog(`Toggle status user: ${u.username}`);
-        showToast(`Status ${u.username} diubah menjadi ${u.status}`, 'info');
-        renderView();
+        const newStatus = u.status === 'Aktif' ? 'Nonaktif' : 'Aktif';
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: 'toggleUserStatus', id: String(u.id), status: newStatus })
+            });
+            const result = await response.json();
+            
+            if (result.status === 'success') {
+                u.status = newStatus;
+                addAuditLog(`Toggle status user: ${u.username}`);
+                showToast(`Status ${u.username} diubah menjadi ${newStatus}`, 'info');
+                renderView();
+            } else {
+                showToast('Gagal: ' + result.message, 'error');
+            }
+        } catch (error) {
+            showToast('Terjadi kesalahan koneksi ke database.', 'error');
+        }
     }
 }
 
