@@ -1091,25 +1091,47 @@ function openPesertaModal(id = null) {
     
     openModal(html);
 
-    // --- LOGIKA DINAMIS: Tampilkan/Sembunyikan Form Khusus Balita ---
-    const katSelect = document.getElementById('p-kat');
-    const groupBalita = document.getElementById('group-khusus-balita');
-    const inputOrtu = document.getElementById('p-ortu');
-    const inputBBLahir = document.getElementById('p-bb-lahir');
-    const inputTBLahir = document.getElementById('p-tb-lahir');
+    // --- LOGIKA DINAMIS: Tampilkan/Sembunyikan Form & Validasi Gender ---
+const katSelect = document.getElementById('p-kat');
+const genderSelect = document.getElementById('p-gender');
+const groupBalita = document.getElementById('group-khusus-balita');
+const inputOrtu = document.getElementById('p-ortu');
+const inputBBLahir = document.getElementById('p-bb-lahir');
+const inputTBLahir = document.getElementById('p-tb-lahir');
 
-    katSelect.addEventListener('change', function() {
-        if (this.value === 'Balita') {
-            groupBalita.style.display = 'block';
-            inputOrtu.setAttribute('required', 'required');
-        } else {
-            groupBalita.style.display = 'none';
-            inputOrtu.removeAttribute('required');
-            inputOrtu.value = ''; 
-            inputBBLahir.value = ''; // Reset nilai agar tidak tersimpan sebagai sampah
-            inputTBLahir.value = ''; // Reset nilai agar tidak tersimpan sebagai sampah
-        }
-    });
+// Fungsi untuk mengatur state Jenis Kelamin berdasarkan Kategori
+const updateGenderState = () => {
+    if (katSelect.value === 'Ibu Hamil') {
+        genderSelect.value = 'Perempuan';
+        genderSelect.disabled = true;
+        // Tambahkan class agar terlihat dinonaktifkan secara visual
+        genderSelect.classList.add('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
+    } else {
+        genderSelect.disabled = false;
+        genderSelect.classList.remove('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
+    }
+};
+
+katSelect.addEventListener('change', function() {
+    // 1. Update Gender secara otomatis
+    updateGenderState();
+    
+    // 2. Update Form Khusus Balita
+    if (this.value === 'Balita') {
+        groupBalita.style.display = 'block';
+        inputOrtu.setAttribute('required', 'required');
+    } else {
+        groupBalita.style.display = 'none';
+        inputOrtu.removeAttribute('required');
+        inputOrtu.value = ''; 
+        inputBBLahir.value = ''; 
+        inputTBLahir.value = ''; 
+    }
+});
+
+// Panggil fungsi ini saat modal pertama kali dibuka 
+// (Penting untuk menangani kasus "Edit Data" atau saat default kategori adalah Ibu Hamil)
+updateGenderState();
 
     // --- LOGIKA PENYIMPANAN DATA ---
     document.getElementById('form-peserta').onsubmit = async (e) => {
@@ -1135,6 +1157,7 @@ function openPesertaModal(id = null) {
 
         if (data.nik.length !== 16) return showToast('NIK harus terdiri dari 16 digit!', 'error');
         if (isBalitaSubmit && !data.nama_orang_tua) return showToast('Nama Orang Tua/Wali wajib diisi untuk Balita!', 'error');
+        if (kategori === 'Ibu Hamil' && data.jenis_kelamin !== 'Perempuan') return showToast('Kategori Ibu Hamil hanya berlaku untuk jenis kelamin Perempuan!', 'error');
 
         const submitBtn = e.target.querySelector('button[type="submit"]');
         const originalBtnText = submitBtn.innerText;
@@ -1209,12 +1232,12 @@ function openDeleteConfirmationModal(id, nama) {
         </div>
         <div class="modal-body">
             <p class="text-sm text-slate-600 mb-4 text-center sm:text-left">
-                Anda yakin ingin menghapus data peserta <b class="text-slate-800 text-base">"${nama}"</b>?
+                Anda yakin ingin menghapus data peserta <b class="text-slate-800 text-base">"${nama}"</b> ?
             </p>
             <div class="bg-rose-50 border border-rose-100 rounded-xl p-4 text-left">
                 <p class="text-xs font-bold text-rose-700 mb-1 flex items-center gap-1">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                    PERINGATAN PENTING:
+                    PERINGATAN PENTING :
                 </p>
                 <p class="text-xs text-rose-600 leading-relaxed">
                     Semua data <b>riwayat pemeriksaan medis</b> yang terkait dengan peserta ini akan <b>dihapus secara permanen</b> dari database dan tidak dapat dikembalikan.
@@ -1458,7 +1481,7 @@ function openDetailModal(id) {
         <div class="modal-header no-print"><h3 class="text-lg font-black text-slate-800">Detail Rekam Medis</h3><button class="btn-icon" onclick="closeModal()">${icons.close}</button></div>
         <div class="modal-body">
             <div class="text-center pb-4 border-b-2 border-double border-slate-300">
-                <h2 class="text-lg font-black text-slate-800 uppercase">POSYANDU DAHLIA MULIA</h2>
+                <h2 class="text-lg font-black text-slate-800 uppercase">POSYANDU VANDA 3</h2>
                 <p class="text-xs text-slate-500 font-semibold">Wilayah Kerja Puskesmas Sehat</p>
             </div>
             <div class="grid grid-cols-2 gap-4 text-xs"><div><p class="text-slate-400 font-bold uppercase">ID PEMERIKSAAN</p><p class="font-bold text-slate-800 font-mono">${p.id}</p></div><div><p class="text-slate-400 font-bold uppercase">TANGGAL</p><p class="font-bold text-slate-800">${new Date(p.tanggal).toLocaleDateString('id-ID', {day:'numeric',month:'long',year:'numeric'})}</p></div></div>
