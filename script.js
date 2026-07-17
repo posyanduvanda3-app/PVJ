@@ -1181,11 +1181,26 @@ function openPemeriksaanModal(pesertaId) {
             <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 space-y-4">
                 <span class="section-title text-blue-700">C. FORMULIR SPESIFIK LANSIA</span>
                 <div class="grid grid-cols-3 gap-4">
-                    <div class="form-group"><label class="form-label text-blue-800">Gula Darah</label><input type="number" id="pem-gula" class="form-input"></div>
-                    <div class="form-group"><label class="form-label text-blue-800">Kolesterol</label><input type="number" id="pem-kol" class="form-input"></div>
-                    <div class="form-group"><label class="form-label text-blue-800">Asam Urat</label><input type="number" id="pem-asam" class="form-input"></div>
+                    <div class="form-group"><label class="form-label text-purple-800">Gula Darah (mg/dL)</label><input type="number" id="pem-gula" class="form-input" placeholder="Cth: 120"></div>
+                    <div class="form-group"><label class="form-label text-purple-800">Kolesterol (mg/dL)</label><input type="number" id="pem-kol" class="form-input" placeholder="Cth: 200"></div>
+                    <div class="form-group"><label class="form-label text-purple-800">Asam Urat (mg/dL)</label><input type="number" id="pem-asam" class="form-input" placeholder="Cth: 6.5"></div>
                 </div>
                 <div class="form-group"><label class="form-label text-blue-800">Riwayat Penyakit</label><input type="text" id="pem-riwayat" class="form-input"></div>
+            </div>
+        `;
+    }  else if (peserta.kategori === 'Dewasa') {
+        specificFields = `
+            <div class="bg-blue-50 p-4 rounded-xl border border-purple-100 space-y-4">
+                <span class="section-title text-purple-700">C. FORMULIR SPESIFIK DEWASA</span>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="form-group"><label class="form-label text-purple-800">Gula Darah (mg/dL)</label><input type="number" id="pem-gula" class="form-input" placeholder="Cth: 120"></div>
+                    <div class="form-group"><label class="form-label text-purple-800">Kolesterol (mg/dL)</label><input type="number" id="pem-kol" class="form-input" placeholder="Cth: 200"></div>
+                    <div class="form-group"><label class="form-label text-purple-800">Asam Urat (mg/dL)</label><input type="number" id="pem-asam" class="form-input" placeholder="Cth: 6.5"></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label text-purple-800">Riwayat Penyakit / Keluhan Khusus</label>
+                    <input type="text" id="pem-riwayat" class="form-input" placeholder="Cth : Maag, Hipertensi, dll">
+                </div>
             </div>
         `;
     }
