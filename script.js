@@ -112,7 +112,7 @@ const logo_posyandu = 'Images/logo_posyandu.png';
 // ==========================================
 // 1. KONFIGURASI API (GANTI DENGAN URL DEPLOYMENT ANDA)
 // ==========================================
-const API_URL = 'https://script.google.com/macros/s/AKfycbytXOwEgU96ttCF9g5OMZxYAyi0-lgcWaerNUIWMQAmYz0O3jphRWM5J9Uc6UrUd3xC/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbw2_pF9TkcGvEcoOlWz74gXTQU-F6zyaEUKARkETimzNPVZtytmZzYbJGlg8tmcsQ7V/exec';
 
 // State awal masih kosong, akan diisi dari Spreadsheet
 const state = {
@@ -308,7 +308,7 @@ document.getElementById('login-form').addEventListener('submit', (e) => {
     }
 
     if (foundUser.password !== password) {
-        errorEl.textContent = 'Password salah! Silakan coba lagi.';
+        errorEl.textContent = 'Password salah ! Silahkan coba lagi.';
         errorEl.classList.remove('hidden');
         return;
     }
@@ -1537,8 +1537,11 @@ function openImportMassalModal() {
         </div>
         <form id="form-import" class="modal-body">
             <div class="p-4 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-800 mb-4">
-                <b>Pastikan kolom Excel Anda memiliki header:</b><br>
-                NIK, Nama, Jenis_Kelamin, Tanggal_Lahir, BB Lahir, TB Lahir, Nama_Orang_Tua, RT, RW, Alamat.
+                <b>Sistem akan otomatis mendeteksi header dan memperbaiki:</b><br>
+                1. Mengabaikan baris judul di atas header (Application List, dll)<br>
+                2. Format tanggal (MM/DD/YY ke YYYY-MM-DD)<br>
+                3. Spasi tersembunyi pada NIK<br>
+                4. Tanda koma desimal pada BB/TB Lahir
             </div>
             
             <div class="form-group mb-4">
@@ -1554,6 +1557,22 @@ function openImportMassalModal() {
     `;
     openModal(html);
 
+    // --- FUNGSI BANTU PEMBERSIH DATA ---
+    const parseDate = (val) => {
+        if (!val) return '';
+        if (typeof val === 'number') {
+            const date = new Date(Math.round((val - 25569) * 86400 * 1000));
+            return date.toISOString().split('T')[0];
+        }
+        const str = String(val).trim();
+        const date = new Date(str);
+        if (!isNaN(date.getTime())) return date.toISOString().split('T')[0];
+        return str;
+    };
+
+    const cleanNIK = (val) => String(val || '').replace(/[^\d]/g, '').substring(0, 16);
+    const cleanDecimal = (val) => String(val || '').replace(',', '.').trim();
+
     document.getElementById('form-import').onsubmit = async (e) => {
         e.preventDefault();
         const fileInput = document.getElementById('import-file');
@@ -1565,59 +1584,95 @@ function openImportMassalModal() {
             return;
         }
 
-        btn.innerText = 'Membaca file...';
+        btn.innerText = 'Membaca dan membersihkan data...';
         btn.disabled = true;
 
         const reader = new FileReader();
         reader.onload = async (event) => {
             try {
                 const data = new Uint8Array(event.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
+                const workbook = XLSX.read(data, { type: 'array', cellDates: true });
                 const firstSheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[firstSheetName];
                 
-                // Baca data sebagai JSON
-                const rawData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+                // ✅ BACA SEBAGAI ARRAY OF ARRAYS UNTUK MENDETEKSI HEADER DINAMIS
+                const rawDataArray = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
 
-                if (rawData.length === 0) {
-                    showToast('File Excel kosong atau format tidak sesuai!', 'error');
+                if (rawDataArray.length === 0) {
+                    showToast('File Excel kosong!', 'error');
                     btn.innerText = 'Proses Import';
                     btn.disabled = false;
                     return;
                 }
 
-                btn.innerText = 'Mengirim ke Database...';
-
-                // Peta kolom Excel ke format aplikasi kita
-                const mappedData = rawData.map((row, index) => {
-                    // Bersihkan NIK dari spasi atau karakter tersembunyi
-                    const nik = String(row['NIK'] || row['nik'] || '').replace(/\s/g, '');
-                    
-                    // Format Tanggal Lahir (menangani format tanggal Excel)
-                    let tglLahir = row['Tanggal_Lahir'] || row['tanggal_lahir'] || '';
-                    if (typeof tglLahir === 'number') {
-                        // Konversi tanggal Excel serial number ke YYYY-MM-DD
-                        const date = new Date(Math.round((tglLahir - 25569) * 86400 * 1000));
-                        tglLahir = date.toISOString().split('T')[0];
+                // ✅ CARI BARIS YANG MENGANDUNG HEADER "NIK"
+                let headerRowIndex = -1;
+                for (let i = 0; i < rawDataArray.length; i++) {
+                    const row = rawDataArray[i];
+                    if (row && row.some(cell => String(cell).trim().toLowerCase() === 'nik')) {
+                        headerRowIndex = i;
+                        break;
                     }
+                }
 
-                    const jk = String(row['Jenis_Kelamin'] || row['jenis_kelamin'] || '').trim().toUpperCase();
+                if (headerRowIndex === -1) {
+                    showToast('Header "NIK" tidak ditemukan dalam file Excel!', 'error');
+                    btn.innerText = 'Proses Import';
+                    btn.disabled = false;
+                    return;
+                }
+
+                // Ambil header dan baris data di bawahnya
+                const headers = rawDataArray[headerRowIndex].map(h => String(h).trim());
+                const dataRows = rawDataArray.slice(headerRowIndex + 1).filter(row => row.some(cell => cell !== "" && cell !== null && cell !== undefined));
+
+                if (dataRows.length === 0) {
+                    showToast('Tidak ada data setelah header!', 'error');
+                    btn.innerText = 'Proses Import';
+                    btn.disabled = false;
+                    return;
+                }
+
+                // Konversi ke JSON manual berdasarkan header yang ditemukan
+                const rawData = dataRows.map(row => {
+                    let obj = {};
+                    headers.forEach((h, i) => {
+                        obj[h] = row[i] !== undefined ? row[i] : "";
+                    });
+                    return obj;
+                });
+
+                btn.innerText = 'Memproses dan Mengirim ke Database...';
+
+                // Fungsi untuk mencari nilai kolom secara fleksibel
+                const getValue = (row, possibleKeys) => {
+                    for (const key of possibleKeys) {
+                        const matchedKey = Object.keys(row).find(k => k.trim().toLowerCase() === key.toLowerCase());
+                        if (matchedKey) return row[matchedKey];
+                    }
+                    return '';
+                };
+
+                const mappedData = rawData.map((row, index) => {
+                    const nikRaw = getValue(row, ['NIK', 'nik']);
+                    const tglLahirRaw = getValue(row, ['Tanggal_Lahir', 'tanggal_lahir', 'tgl_lahir']);
+                    const jkRaw = String(getValue(row, ['Jenis_Kelamin', 'jenis_kelamin', 'jk'])).trim().toUpperCase();
                     
                     return {
                         id: `REG-${Date.now()}-${index}`,
                         no_registrasi: `REG-${Date.now()}-${index}`,
-                        nik: nik,
-                        nama: String(row['Nama'] || row['nama'] || '').trim(),
-                        nama_orang_tua: String(row['Nama_Orang_Tua'] || row['nama_orang_tua'] || '').trim(),
-                        tanggal_lahir: tglLahir,
-                        jenis_kelamin: (jk === 'L' || jk === 'LAKI-LAKI') ? 'Laki-laki' : 'Perempuan',
-                        bb_lahir: String(row['BB Lahir'] || row['bb_lahir'] || ''),
-                        tb_lahir: String(row['TB Lahir'] || row['tb_lahir'] || ''),
-                        rt: String(row['RT'] || row['rt'] || ''),
-                        rw: String(row['RW'] || row['rw'] || ''),
-                        alamat: String(row['Alamat'] || row['alamat'] || 'Data Wilayah'),
-                        kategori: 'Balita', // Default Balita sesuai nama file
-                        no_hp: ''
+                        nik: cleanNIK(nikRaw),
+                        nama: String(getValue(row, ['Nama', 'nama'])).trim(),
+                        nama_orang_tua: String(getValue(row, ['Nama_Orang_Tua', 'nama_orang_tua', 'orang_tua'])).trim(),
+                        tanggal_lahir: parseDate(tglLahirRaw),
+                        jenis_kelamin: (jkRaw === 'L' || jkRaw === 'LAKI-LAKI' || jkRaw === 'LAKI') ? 'Laki-laki' : 'Perempuan',
+                        bb_lahir: cleanDecimal(getValue(row, ['BB Lahir', 'bb_lahir', 'bb'])),
+                        tb_lahir: cleanDecimal(getValue(row, ['TB Lahir', 'tb_lahir', 'tb'])),
+                        rt: String(getValue(row, ['RT', 'rt'])).trim(),
+                        rw: String(getValue(row, ['RW', 'rw'])).trim(),
+                        alamat: String(getValue(row, ['Alamat', 'alamat'])).trim() || 'Data Wilayah',
+                        kategori: 'Balita',
+                        no_hp: String(getValue(row, ['No_HP', 'no_hp', 'hp'])).trim()
                     };
                 });
 
@@ -1633,12 +1688,11 @@ function openImportMassalModal() {
                 const result = await response.json();
 
                 if (result.status === 'success') {
-                    // Update state lokal
                     state.pesertaList.push(...mappedData);
                     addAuditLog(`Import massal ${mappedData.length} data peserta Balita`);
                     showToast(`Berhasil! ${mappedData.length} data peserta ditambahkan.`, 'success');
                     closeModal();
-                    renderView(); // Refresh tabel
+                    renderView();
                 } else {
                     showToast('Gagal: ' + result.message, 'error');
                 }
