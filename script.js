@@ -20,7 +20,8 @@ const icons = {
     eyeOff: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>`,
     printer: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>`,
     check: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>`,
-    close: `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>`
+    close: `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>`,
+    refresh: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>`
 };
 
 const INITIAL_DATA = {
@@ -440,25 +441,78 @@ function renderSidebar() {
 
 function renderHeader() {
     const today = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    
-    // Membuat huruf pertama selalu kapital (Dashboard, Data Peserta, dll)
     const menuTitle = state.currentMenu.replace('_', ' ').replace(/^\w/, (c) => c.toUpperCase());
-
+    
     document.getElementById('top-header').innerHTML = `
         <div>
             <h2 class="text-xl font-black text-slate-800">${menuTitle}</h2>
             <p class="text-xs text-slate-400">Puskesmas Sehat • Posyandu Vanda 3</p>
         </div>
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3">
             <div class="hidden md:flex items-center gap-2 bg-emerald-50 text-emerald-800 px-3 py-1.5 rounded-xl border border-emerald-100 text-xs font-bold">
-                <span class="w-2.5 h-2.5 bg-emerald-500 rounded-full"></span> Sistem Online
+                <span class="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse"></span> 
+                Sistem Online
             </div>
-            <div class="text-right">
+            
+            <!-- ✅ TOMBOL REFRESH DATA PROFESIONAL -->
+            <button id="btn-refresh" class="btn-refresh" title="Sinkronkan Data Terbaru dari Database">
+                ${icons.refresh}
+            </button>
+            
+            <div class="text-right hidden sm:block">
                 <p class="text-xs font-semibold text-slate-500">Tanggal Hari Ini</p>
                 <p class="text-sm font-bold text-slate-700">${today}</p>
             </div>
         </div>
     `;
+    
+    // Pasang event listener untuk tombol refresh
+    const refreshBtn = document.getElementById('btn-refresh');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', refreshData);
+    }
+}
+
+// ==========================================
+// FUNGSI REFRESH DATA (TANPA LOGOUT)
+// ==========================================
+async function refreshData() {
+    const btn = document.getElementById('btn-refresh');
+    if (!btn || btn.disabled) return; // Cegah double-click
+    
+    // 1. Aktifkan state loading (animasi spinning)
+    btn.disabled = true;
+    btn.classList.add('spinning');
+    btn.title = 'Memperbarui data...';
+    
+    try {
+        const response = await fetch(`${API_URL}?action=getAllData`);
+        if (!response.ok) throw new Error("Gagal terhubung ke API");
+        const data = await response.json();
+        
+        // 2. Update state data TANPA menyentuh state.user (agar tidak logout)
+        state.pesertaList = (data.peserta || []).reverse();
+        state.pemeriksaanList = (data.pemeriksaan || []).reverse();
+        state.jadwalList = (data.jadwal || []).reverse();
+        state.logActivities = (data.logs || []).reverse();
+        
+        // 3. Render ulang view yang sedang aktif saja (bukan seluruh aplikasi)
+        renderView();
+        
+        // 4. Notifikasi sukses dengan timestamp
+        const now = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        showToast(`Data berhasil disinkronkan (${now})`, 'success');
+        btn.title = `Terakhir diperbarui: ${now}`;
+        
+    } catch (error) {
+        console.error('Refresh error:', error);
+        showToast('Gagal memuat data. Periksa koneksi internet Anda.', 'error');
+        btn.title = 'Gagal memuat. Klik untuk coba lagi.';
+    } finally {
+        // 5. Kembalikan tombol ke state normal
+        btn.disabled = false;
+        btn.classList.remove('spinning');
+    }
 }
 
 function renderView() {
