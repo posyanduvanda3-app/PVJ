@@ -24,6 +24,7 @@ const icons = {
     printer: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>`,
     check: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>`,
     close: `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>`,
+    userBadge: `<svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
     refresh: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>`,
     home: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>`
 };
@@ -150,38 +151,53 @@ const INITIAL_DATA_USERS = [
 ];
 
 async function loadDatabaseFromSpreadsheet() {
-    // Tampilkan loading (opsional: bisa tambahkan spinner di HTML)
-    console.log("Memuat data dari Spreadsheet...");
+    console.log("🔄 Memulai koneksi ke API...");
+    console.log(" API URL:", API_URL);
     
     try {
         const response = await fetch(`${API_URL}?action=getAllData`);
         
-        if (!response.ok) throw new Error("Gagal terhubung ke API");
+        if (!response.ok) {
+            throw new Error(`HTTP Error: ${response.status} - ${response.statusText}`);
+        }
         
         const data = await response.json();
+        console.log("✅ Data berhasil dimuat:", data);
         
-             // Pastikan data ada, jika kosong/gagal, gunakan INITIAL_DATA
-     state.usersList = (data.users && data.users.length > 0) ? data.users : INITIAL_DATA_USERS;
-     
-     // ✅ TAMBAHKAN .reverse() agar data terbaru (paling bawah di sheet) muncul di paling atas UI
-     state.pesertaList = (data.peserta || []).reverse();
-     state.pemeriksaanList = (data.pemeriksaan || []).reverse();
-     state.jadwalList = (data.jadwal || []).reverse(); 
-     state.logActivities = (data.logs || []).reverse();
+        state.usersList = (data.users && data.users.length > 0) ? data.users : INITIAL_DATA_USERS;
+        state.pesertaList = (data.peserta || []).reverse();
+        state.pemeriksaanList = (data.pemeriksaan || []).reverse();
+        state.jadwalList = (data.jadwal || []).reverse(); 
+        state.logActivities = (data.logs || []).reverse();
         
-        console.log("Data berhasil dimuat:", state.usersList);
         renderApp(); 
         
     } catch (error) {
-        console.error("Error load data:", error);
-        // FALLBACK: Gunakan data lokal agar aplikasi tetap bisa dipakai saat offline/error API
+        console.error("❌ Error detail:", error);
+        console.error(" Response status:", error.status);
+        
+        // Tampilkan pesan error yang lebih informatif
+        let errorMessage = 'Mode Offline: Menggunakan data lokal. ';
+        
+        if (error.message.includes('Failed to fetch')) {
+            errorMessage += 'API tidak dapat diakses. Periksa URL dan koneksi internet.';
+        } else if (error.message.includes('401') || error.message.includes('403')) {
+            errorMessage += 'Akses ditolak. Periksa setting "Who has access" di deployment.';
+        } else if (error.message.includes('404')) {
+            errorMessage += 'URL API tidak ditemukan. Periksa URL deployment.';
+        } else {
+            errorMessage += 'Periksa koneksi API.';
+        }
+        
+        showToast(errorMessage, 'error');
+        
+        // Fallback ke data lokal
         state.usersList = INITIAL_DATA_USERS;
-        showToast('Mode Offline: Menggunakan data lokal. Periksa koneksi API.', 'error');
         renderApp();
     }
 }
 
-// Kirim data baru ke Spreadsheet (Contoh: Tambah Peserta)
+// Kirim data baru ke Spreadsheet (Contoh : Tambah Peserta)
 async function syncAddPeserta(dataPeserta) {
     try {
         showToast('Menyimpan ke database...', 'info');
@@ -436,10 +452,11 @@ function renderSidebar() {
             ${adminNav}
         </nav>
         <div class="sidebar-footer">
-            <div class="flex items-center gap-3 mb-3">
-                <div class="w-9 h-9 rounded-full bg-emerald-500 flex items-center justify-center text-white font-black text-sm">
-                    ${state.user.nama.substring(0, 2).toUpperCase()}
+            <div class="flex items-center gap-4 mb-4">
+                <div class="w-12 h-12 rounded-full bg-emerald-500 flex items-center justify-center text-white p-1.5">
+                    ${icons.userBadge}
                 </div>
+
                 <div class="flex-1 min-w-0">
                     <p class="text-xs font-bold text-white truncate">${state.user.nama}</p>
                     <span class="inline-block px-2 py-0.5 text-xs font-semibold bg-emerald-900/40 text-emerald-400 rounded-full">${role}</span>
@@ -1096,11 +1113,11 @@ function openPesertaModal(id = null) {
                     <div class="grid grid-cols-2 gap-4">
                         <div class="form-group">
                             <label class="form-label text-rose-800">BB Lahir (Kg)</label>
-                            <input type="number" step="0.01" id="p-bb-lahir" class="form-input" value="${p ? (p.bb_lahir || '') : ''}" placeholder="Cth: 3.2">
+                            <input type="number" step="0.01" id="p-bb-lahir" class="form-input" value="${p ? (p.bb_lahir || '') : ''}" placeholder="Cth : 3.2">
                         </div>
                         <div class="form-group">
                             <label class="form-label text-rose-800">TB Lahir (Cm)</label>
-                            <input type="number" step="0.1" id="p-tb-lahir" class="form-input" value="${p ? (p.tb_lahir || '') : ''}" placeholder="Cth: 50">
+                            <input type="number" step="0.1" id="p-tb-lahir" class="form-input" value="${p ? (p.tb_lahir || '') : ''}" placeholder="Cth : 50">
                         </div>
                     </div>
                 </div>
@@ -1391,7 +1408,7 @@ function openPemeriksaanModal(pesertaId) {
                     <div class="form-group"><label class="form-label text-rose-800">Status Gizi</label><select id="pem-status-gizi" class="form-input"><option>Sesuai / Baik</option><option>Gizi Kurang</option><option>Gizi Buruk</option></select></div>
                     <div class="form-group"><label class="form-label text-rose-800">Tinggi/Umur (Stunting)</label><select id="pem-tinggi-umur" class="form-input"><option>Normal</option><option>Sangat Pendek (Stunting)</option></select></div>
                 </div>
-                <div class="form-group"><label class="form-label text-rose-800">Imunisasi</label><input type="text" id="pem-imunisasi" class="form-input" placeholder="Cth: DPT-HB-Hib 3"></div>
+                <div class="form-group"><label class="form-label text-rose-800">Imunisasi</label><input type="text" id="pem-imunisasi" class="form-input" placeholder="Cth : DPT-HB-Hib 3"></div>
             </div>
         `;
     } else if (peserta.kategori === 'Ibu Hamil') {
@@ -1411,9 +1428,9 @@ function openPemeriksaanModal(pesertaId) {
             <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 space-y-4">
                 <span class="section-title text-blue-700">C. FORMULIR SPESIFIK LANSIA</span>
                 <div class="grid grid-cols-3 gap-4">
-                    <div class="form-group"><label class="form-label text-purple-800">Gula Darah (mg/dL)</label><input type="number" id="pem-gula" class="form-input" placeholder="Cth: 120"></div>
-                    <div class="form-group"><label class="form-label text-purple-800">Kolesterol (mg/dL)</label><input type="number" id="pem-kol" class="form-input" placeholder="Cth: 200"></div>
-                    <div class="form-group"><label class="form-label text-purple-800">Asam Urat (mg/dL)</label><input type="number" id="pem-asam" class="form-input" placeholder="Cth: 6.5"></div>
+                    <div class="form-group"><label class="form-label text-purple-800">Gula Darah (mg/dL)</label><input type="number" id="pem-gula" class="form-input" placeholder="Cth : 120"></div>
+                    <div class="form-group"><label class="form-label text-purple-800">Kolesterol (mg/dL)</label><input type="number" id="pem-kol" class="form-input" placeholder="Cth : 200"></div>
+                    <div class="form-group"><label class="form-label text-purple-800">Asam Urat (mg/dL)</label><input type="number" id="pem-asam" class="form-input" placeholder="Cth : 6.5"></div>
                 </div>
                 <div class="form-group"><label class="form-label text-blue-800">Riwayat Penyakit</label><input type="text" id="pem-riwayat" class="form-input"></div>
             </div>
@@ -1423,9 +1440,9 @@ function openPemeriksaanModal(pesertaId) {
             <div class="bg-blue-50 p-4 rounded-xl border border-purple-100 space-y-4">
                 <span class="section-title text-purple-700">C. FORMULIR SPESIFIK DEWASA</span>
                 <div class="grid grid-cols-3 gap-4">
-                    <div class="form-group"><label class="form-label text-purple-800">Gula Darah (mg/dL)</label><input type="number" id="pem-gula" class="form-input" placeholder="Cth: 120"></div>
-                    <div class="form-group"><label class="form-label text-purple-800">Kolesterol (mg/dL)</label><input type="number" id="pem-kol" class="form-input" placeholder="Cth: 200"></div>
-                    <div class="form-group"><label class="form-label text-purple-800">Asam Urat (mg/dL)</label><input type="number" id="pem-asam" class="form-input" placeholder="Cth: 6.5"></div>
+                    <div class="form-group"><label class="form-label text-purple-800">Gula Darah (mg/dL)</label><input type="number" id="pem-gula" class="form-input" placeholder="Cth : 120"></div>
+                    <div class="form-group"><label class="form-label text-purple-800">Kolesterol (mg/dL)</label><input type="number" id="pem-kol" class="form-input" placeholder="Cth : 200"></div>
+                    <div class="form-group"><label class="form-label text-purple-800">Asam Urat (mg/dL)</label><input type="number" id="pem-asam" class="form-input" placeholder="Cth : 6.5"></div>
                 </div>
                 <div class="form-group">
                     <label class="form-label text-purple-800">Riwayat Penyakit / Keluhan Khusus</label>
@@ -1451,11 +1468,11 @@ function openPemeriksaanModal(pesertaId) {
                     <div class="form-group"><label class="form-label">BB (Kg)</label><input type="number" step="0.1" id="pem-bb" class="form-input" oninput="calcIMT()" required></div>
                     <div class="form-group"><label class="form-label">TB (Cm)</label><input type="number" step="0.1" id="pem-tb" class="form-input" oninput="calcIMT()" required></div>
                     <div class="form-group"><label class="form-label">IMT</label><input type="text" id="pem-imt" class="form-input bg-emerald-50 text-emerald-800 font-black" disabled placeholder="Otomatis"></div>
-                    <div class="form-group"><label class="form-label">Lingkar Perut (cm)</label><input type="number" step="0.1" id="pem-lingkar-perut" class="form-input" placeholder="Contoh: 78"></div>
+                    <div class="form-group"><label class="form-label">Lingkar Perut (cm)</label><input type="number" step="0.1" id="pem-lingkar-perut" class="form-input" placeholder="Contoh : 78"></div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div class="form-group"><label class="form-label">Tekanan Darah</label><input type="text" id="pem-td" class="form-input" placeholder="120/80"></div>
-                    <div class="form-group"><label class="form-label">Lingkar Lengan Atas / LiLA (cm)</label><input type="number" step="0.1" id="pem-lila" class="form-input" placeholder="Contoh: 26"></div>
+                    <div class="form-group"><label class="form-label">Lingkar Lengan Atas / LiLA (cm)</label><input type="number" step="0.1" id="pem-lila" class="form-input" placeholder="Contoh : 26"></div>
                 </div>
             </div>
             ${specificFields}
