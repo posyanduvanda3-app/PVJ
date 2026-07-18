@@ -1463,23 +1463,41 @@ function openPemeriksaanModal(pesertaId) {
                 </div>
             </div>
             <div class="space-y-4">
-                <span class="section-title">B. PEMERIKSAAN FISIK</span>
-                <div class="grid grid-cols-4 gap-4">
-                    <div class="form-group"><label class="form-label">BB (Kg)</label><input type="number" step="0.1" id="pem-bb" class="form-input" oninput="calcIMT()" required></div>
-                    <div class="form-group"><label class="form-label">TB (Cm)</label><input type="number" step="0.1" id="pem-tb" class="form-input" oninput="calcIMT()" required></div>
-                    <div class="form-group"><label class="form-label">IMT</label><input type="text" id="pem-imt" class="form-input bg-emerald-50 text-emerald-800 font-black" disabled placeholder="Otomatis"></div>
-                    <div class="form-group"><label class="form-label">Lingkar Perut (cm)</label><input type="number" step="0.1" id="pem-lingkar-perut" class="form-input" placeholder="Contoh : 78"></div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="form-group">
-                        <label class="form-label">Tekanan Darah</label>
-                        <input type="text" id="pem-td" class="form-input" placeholder="120/80" 
-                         oninput="this.value = this.value.replace(/[^0-9\/]/g, '').substring(0, 7)" 
-                         maxlength="7">
-                    </div>
-                    <div class="form-group"><label class="form-label">Lingkar Lengan Atas / LiLA (cm)</label><input type="number" step="0.1" id="pem-lila" class="form-input" placeholder="Contoh : 26"></div>
-                </div>
-            </div>
+    <span class="section-title">B. PEMERIKSAAN FISIK</span>
+    
+    <!-- Baris 1: BB, TB, IMT -->
+    <div class="grid grid-cols-3 gap-4">
+        <div class="form-group">
+            <label class="form-label">BB (Kg)</label>
+            <input type="number" step="0.1" id="pem-bb" class="form-input" oninput="calcIMT()" required placeholder="Cth : 60">
+        </div>
+        <div class="form-group">
+            <label class="form-label">TB (Cm)</label>
+            <input type="number" step="0.1" id="pem-tb" class="form-input" oninput="calcIMT()" required placeholder="Cth : 165">
+        </div>
+        <div class="form-group">
+            <label class="form-label">IMT</label>
+            <input type="text" id="pem-imt" class="form-input bg-emerald-50 text-emerald-800 font-black" disabled placeholder="Otomatis">
+        </div>
+    </div>
+    
+    <!-- Baris 2: Tekanan Darah, Lingkar Perut, LiLA -->
+    <div class="grid grid-cols-3 gap-4">
+        <div class="form-group">
+            <label class="form-label">Tekanan Darah</label>
+            <input type="text" id="pem-td" class="form-input" placeholder="120/80" oninput="this.value = this.value.replace(/[^0-9\/]/g, '').substring(0, 7)" maxlength="7">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Lingkar Perut (cm)</label>
+            <input type="number" step="0.1" id="pem-lingkar-perut" class="form-input" placeholder="Cth : 78">
+        </div>
+        <div class="form-group">
+            <label class="form-label">LiLA (cm)</label>
+            <input type="number" step="0.1" id="pem-lila" class="form-input" placeholder="Cth : 26">
+        </div>
+    </div>
+</div>
+
             ${specificFields}
             <div class="space-y-4">
                 <span class="section-title">D. DIAGNOSA & TINDAKAN</span>
