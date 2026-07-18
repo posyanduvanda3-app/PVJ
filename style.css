@@ -1320,9 +1320,9 @@ RESPONSIVE TABLE CARD VIEW (MOBILE)
         display: none;
     }
     
-    /* Tombol aksi diregangkan agar mudah ditekan di HP */
     .mobile-card-table .action-btns {
         flex-direction: row;
+        flex-wrap: wrap; /* Tambahan: agar tombol turun ke baris baru jika layar sempit */
         gap: 0.5rem;
         width: 100%;
     }
