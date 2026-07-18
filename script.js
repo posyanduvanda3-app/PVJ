@@ -1031,7 +1031,7 @@ function attachViewEvents() {
             searchTimeout = setTimeout(() => {
                 state.filters.peserta.search = e.target.value.trim().toLowerCase();
                 renderView();
-            }, 1200); // Tunggu 1200ms setelah user berhenti mengetik
+            }, 1500); // Tunggu 1500ms setelah user berhenti mengetik
         });
     }
 
@@ -1055,7 +1055,7 @@ function attachViewEvents() {
             searchTimeout = setTimeout(() => {
                 state.filters.riwayat.search = e.target.value.trim().toLowerCase();
                 renderView(); // Render ulang HANYA setelah user berhenti mengetik
-            }, 1200); // Delay 1200ms (konsisten dengan Data Peserta)
+            }, 1500); // Delay 1500ms (konsisten dengan Data Peserta)
         });
     }
 
