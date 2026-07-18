@@ -251,14 +251,32 @@ function showToast(message, type = 'success') {
     const toast = document.createElement('div');
     toast.className = `toast ${type === 'error' ? 'error' : ''}`;
     toast.innerHTML = `
-        <div class="p-1.5 rounded-full ${type === 'error' ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-600'}">${icons.check}</div>
-        <div>
-            <p class="text-xs font-semibold text-slate-500">Notifikasi Sistem</p>
-            <p class="text-sm font-medium text-slate-800">${message}</p>
+        <div class="p-1.5 rounded-full ${type === 'error' ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-600'}">
+            ${type === 'error' ? icons.close : icons.check}
+        </div> 
+        <div class="flex-1"> 
+            <p class="text-xs font-semibold text-slate-500">Notifikasi Sistem</p> 
+            <p class="text-sm font-medium text-slate-800">${message}</p> 
         </div>
     `;
+    
+    // ✅ FITUR BARU: Klik untuk menutup notifikasi secara manual
+    toast.style.cursor = 'pointer';
+    toast.title = 'Klik untuk menutup';
+    toast.addEventListener('click', () => dismissToast(toast));
+
     container.appendChild(toast);
-    setTimeout(() => toast.remove(), 4000);
+    
+    // ✅ PERBAIKAN: Durasi dipercepat dari 4000ms menjadi 2000ms (2 detik)
+    setTimeout(() => dismissToast(toast), 2000); 
+}
+
+// ✅ FUNGSI BARU: Animasi halus saat notifikasi ditutup
+function dismissToast(toast) {
+    if (!toast || toast.classList.contains('fade-out')) return; // Cegah double-click
+    toast.classList.add('fade-out');
+    // Tunggu animasi CSS selesai (250ms) baru hapus elemen dari DOM
+    setTimeout(() => toast.remove(), 250); 
 }
 
 function calculateAge(birthdate) {
