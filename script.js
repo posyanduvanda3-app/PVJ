@@ -285,16 +285,16 @@ function showToast(message, type = 'success') {
 
     container.appendChild(toast);
     
-    // ✅ PERBAIKAN: Durasi dipercepat dari 4000ms menjadi 2000ms (2 detik)
-    setTimeout(() => dismissToast(toast), 2000); 
+    // ✅ PERBAIKAN: Durasi dipercepat dari 4000ms menjadi 1000ms (2 detik)
+    setTimeout(() => dismissToast(toast), 1000); 
 }
 
 // ✅ FUNGSI BARU: Animasi halus saat notifikasi ditutup
 function dismissToast(toast) {
     if (!toast || toast.classList.contains('fade-out')) return; // Cegah double-click
     toast.classList.add('fade-out');
-    // Tunggu animasi CSS selesai (250ms) baru hapus elemen dari DOM
-    setTimeout(() => toast.remove(), 250); 
+    // Tunggu animasi CSS selesai (150ms) baru hapus elemen dari DOM
+    setTimeout(() => toast.remove(), 150); 
 }
 
 function calculateAge(birthdate) {
