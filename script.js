@@ -832,17 +832,17 @@ function renderRiwayat() {
         const matchTgl = !state.filters.riwayat.tanggal || p.tanggal === state.filters.riwayat.tanggal;
         return matchSearch && matchKat && matchTgl;
     });
-
+    
     return `
         <div class="card filter-bar">
             <input type="text" id="filter-riwayat-search" class="form-input" placeholder="Cari Nama Peserta..." value="${state.filters.riwayat.search}">
             <select id="filter-riwayat-kat" class="form-input" style="max-width: 12rem;">
-             <option value="Semua">Semua Kategori</option>
-             <option value="Ibu Hamil" ${state.filters.riwayat.kategori === 'Ibu Hamil' ? 'selected' : ''}>Ibu Hamil</option>
-             <option value="Balita" ${state.filters.riwayat.kategori === 'Balita' ? 'selected' : ''}>Balita</option>
-             <option value="Remaja" ${state.filters.riwayat.kategori === 'Remaja' ? 'selected' : ''}>Remaja</option>
-             <option value="Dewasa" ${state.filters.riwayat.kategori === 'Dewasa' ? 'selected' : ''}>Dewasa</option>
-             <option value="Lansia" ${state.filters.riwayat.kategori === 'Lansia' ? 'selected' : ''}>Lansia</option>    
+                <option value="Semua">Semua Kategori</option>
+                <option value="Ibu Hamil" ${state.filters.riwayat.kategori === 'Ibu Hamil' ? 'selected' : ''}>Ibu Hamil</option>
+                <option value="Balita" ${state.filters.riwayat.kategori === 'Balita' ? 'selected' : ''}>Balita</option>
+                <option value="Remaja" ${state.filters.riwayat.kategori === 'Remaja' ? 'selected' : ''}>Remaja</option>
+                <option value="Dewasa" ${state.filters.riwayat.kategori === 'Dewasa' ? 'selected' : ''}>Dewasa</option>
+                <option value="Lansia" ${state.filters.riwayat.kategori === 'Lansia' ? 'selected' : ''}>Lansia</option>    
             </select>
             <input type="date" id="filter-riwayat-tgl" class="form-input" style="max-width: 12rem;" value="${state.filters.riwayat.tanggal}">
         </div>
@@ -851,26 +851,45 @@ function renderRiwayat() {
                 <span class="text-xs font-bold text-slate-400 uppercase">Rekam Medis Terkini</span>
                 <p class="text-xs font-medium text-slate-500">${filtered.length} transaksi</p>
             </div>
-            <table class="data-table">
-                <thead><tr><th>Tanggal / ID</th><th>Peserta</th><th>Kategori</th><th>Vital Signs</th><th>Diagnosa</th><th class="text-right">Aksi</th></tr></thead>
+            <table class="data-table mobile-card-table">
+                <thead>
+                    <tr>
+                        <th>Tanggal / ID</th>
+                        <th>Peserta</th>
+                        <th>Kategori</th>
+                        <th>Vital Signs</th>
+                        <th>Diagnosa</th>
+                        <th class="text-right">Aksi</th>
+                    </tr>
+                </thead>
                 <tbody>
                     ${filtered.length ? filtered.map(p => `
                         <tr>
-                            <td><span class="font-bold text-slate-800 block">${new Date(p.tanggal).toLocaleDateString('id-ID')}</span><span class="text-xs text-slate-400 font-mono">${p.id}</span></td>
-                            <td><span class="font-bold text-slate-800 block">${p.nama_peserta}</span><span class="text-xs text-slate-400">${p.peserta_id}</span></td>
-                            <td><span class="badge ${p.kategori === 'Balita' ? 'badge-rose' : p.kategori === 'Ibu Hamil' ? 'badge-emerald' : 'badge-blue'}">${p.kategori}</span></td>
-                            <td class="text-xs space-y-1">
+                            <td data-label="Tanggal / ID">
+                                <span class="font-bold text-slate-800 block">${new Date(p.tanggal).toLocaleDateString('id-ID')}</span>
+                                <span class="text-xs text-slate-400 font-mono">${p.id}</span>
+                            </td>
+                            <td data-label="Peserta">
+                                <span class="font-bold text-slate-800 block">${p.nama_peserta}</span>
+                                <span class="text-xs text-slate-400">${p.peserta_id}</span>
+                            </td>
+                            <td data-label="Kategori">
+                                <span class="badge ${p.kategori === 'Balita' ? 'badge-rose' : p.kategori === 'Ibu Hamil' ? 'badge-emerald' : 'badge-blue'}">${p.kategori}</span>
+                            </td>
+                            <td data-label="Vital Signs" class="text-xs space-y-1">
                                 <div>BB: <b>${p.berat_badan} kg</b></div>
                                 <div>TB: <b>${p.tinggi_badan} cm</b></div>
                                 ${p.tekanan_darah ? `<div>TD: <b>${p.tekanan_darah}</b></div>` : ''}
                                 ${p.lingkar_perut ? `<div>L.Perut: <b>${p.lingkar_perut} cm</b></div>` : ''}
                                 ${p.lingkar_lengan_atas ? `<div>LiLA: <b>${p.lingkar_lengan_atas} cm</b></div>` : ''}
                             </td>
-                            <td><span class="font-bold text-slate-800 block truncate max-w-xs">${p.diagnosa}</span></td>
-                            <td class="text-right">
+                            <td data-label="Diagnosa">
+                                <span class="font-bold text-slate-800 block">${p.diagnosa}</span>
+                            </td>
+                            <td class="text-right" data-label="Aksi">
                                 <div class="action-btns">
-                                    <button class="btn btn-secondary text-xs" data-action="detail-pem" data-id="${p.id}">${icons.eye} Detail</button>
-                                    <button class="btn btn-primary text-xs" data-action="cetak-pem" data-id="${p.id}">${icons.printer} Cetak</button>
+                                    <button class="btn btn-secondary text-xs whitespace-nowrap" data-action="detail-pem" data-id="${p.id}">${icons.eye} Detail</button>
+                                    <button class="btn btn-primary text-xs whitespace-nowrap" data-action="cetak-pem" data-id="${p.id}">${icons.printer} Cetak</button>
                                 </div>
                             </td>
                         </tr>
@@ -1264,7 +1283,7 @@ updateGenderState();
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: {
-                      'Content-Type': 'text/plain;charset=utf-8' // ⚠️ WAJIB DITAMBAHKAN
+                      'Content-Type': 'text/plain;charset=utf-8' 
                     },
                     body: JSON.stringify({ action: 'updatePeserta', ...data })
                 });
@@ -1469,7 +1488,7 @@ function openPemeriksaanModal(pesertaId) {
     <div class="grid grid-cols-3 gap-4">
         <div class="form-group">
             <label class="form-label">BB (Kg)</label>
-            <input type="number" step="0.1" id="pem-bb" class="form-input" oninput="calcIMT()" required placeholder="Cth : 60">
+            <input type="number" step="0.1" id="pem-bb" class="form-input" oninput="calcIMT()" required placeholder="Cth: 60">
         </div>
         <div class="form-group">
             <label class="form-label">TB (Cm)</label>
@@ -1494,9 +1513,9 @@ function openPemeriksaanModal(pesertaId) {
         <div class="form-group">
             <label class="form-label">LiLA (cm)</label>
             <input type="number" step="0.1" id="pem-lila" class="form-input" placeholder="Cth : 26">
+            </div>
         </div>
     </div>
-</div>
 
             ${specificFields}
             <div class="space-y-4">
