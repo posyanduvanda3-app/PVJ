@@ -1471,7 +1471,12 @@ function openPemeriksaanModal(pesertaId) {
                     <div class="form-group"><label class="form-label">Lingkar Perut (cm)</label><input type="number" step="0.1" id="pem-lingkar-perut" class="form-input" placeholder="Contoh : 78"></div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="form-group"><label class="form-label">Tekanan Darah</label><input type="text" id="pem-td" class="form-input" placeholder="120/80"></div>
+                    <div class="form-group">
+                        <label class="form-label">Tekanan Darah</label>
+                        <input type="text" id="pem-td" class="form-input" placeholder="120/80" 
+                         oninput="this.value = this.value.replace(/[^0-9\/]/g, '').substring(0, 7)" 
+                         maxlength="7">
+                    </div>
                     <div class="form-group"><label class="form-label">Lingkar Lengan Atas / LiLA (cm)</label><input type="number" step="0.1" id="pem-lila" class="form-input" placeholder="Contoh : 26"></div>
                 </div>
             </div>
