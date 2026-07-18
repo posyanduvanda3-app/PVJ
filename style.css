@@ -720,31 +720,31 @@ code {
     }
     
     /* Top Header Mobile */
-.top-header {
-    padding: 0.75rem 1rem;
-    flex-direction: row !important; 
-    align-items: center;
-    flex-wrap: nowrap; 
-    gap: 0.5rem;
-}
-.top-header > div:first-child {
-    flex: 1;
-    min-width: 0;
-}
-.top-header > div:first-child p {
-    display: none; 
-}
-.top-header > div:first-child h2 {
-    font-size: 1.125rem; 
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis; 
-}
-.top-header > div:last-child {
-    flex-shrink: 0; 
-    width: auto;
-    justify-content: flex-end; 
-}
+    .top-header {
+        padding: 0.75rem 1rem;
+        flex-direction: row !important; 
+        align-items: center;
+        flex-wrap: nowrap; 
+        gap: 0.5rem;
+    }
+    .top-header > div:first-child {
+        flex: 1;
+        min-width: 0;
+    }
+    .top-header > div:first-child p {
+        display: none; 
+    }
+    .top-header > div:first-child h2 {
+        font-size: 1.125rem; 
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis; 
+    }
+    .top-header > div:last-child {
+        flex-shrink: 0; 
+        width: auto;
+        justify-content: flex-end; 
+    }
     
     /* View Container Mobile */
     .view-container {
@@ -1240,5 +1240,96 @@ svg { flex-shrink: 0; }
             0 0 30px rgba(16, 185, 129, 0.35),
             0 0 45px rgba(16, 185, 129, 0.2),
             inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+}
+
+/* ==========================================
+RESPONSIVE TABLE CARD VIEW (MOBILE)
+========================================== */
+@media (max-width: 768px) {
+    /* Paksa semua elemen tabel menjadi block */
+    .mobile-card-table, 
+    .mobile-card-table thead, 
+    .mobile-card-table tbody, 
+    .mobile-card-table th, 
+    .mobile-card-table td, 
+    .mobile-card-table tr {
+        display: block !important;
+    }
+    
+    /* Sembunyikan header tabel asli */
+    .mobile-card-table thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+    
+    /* Ubah setiap baris (tr) menjadi kartu terpisah */
+    .mobile-card-table tr {
+        border: 1px solid var(--slate-200);
+        border-radius: var(--radius-xl);
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background: white;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    /* Styling untuk setiap sel data (td) */
+    .mobile-card-table td {
+        border: none !important;
+        position: relative;
+        padding: 0.5rem 0 0.5rem 40% !important;
+        text-align: right;
+        border-bottom: 1px solid var(--slate-100);
+        min-height: 2rem;
+        display: flex !important;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-end;
+    }
+    
+    .mobile-card-table td:last-child {
+        border-bottom: none !important;
+    }
+    
+    /* Tampilkan label kolom menggunakan atribut data-label */
+    .mobile-card-table td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 0;
+        top: 0.5rem;
+        width: 35%;
+        padding-right: 10px;
+        white-space: nowrap;
+        text-align: left;
+        font-weight: 700;
+        color: var(--slate-500);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+    }
+    
+    /* Penyesuaian khusus untuk kolom Aksi agar tombol rapi */
+    .mobile-card-table td.text-right {
+        text-align: left !important;
+        padding-left: 0 !important;
+        margin-top: 0.75rem;
+        align-items: flex-start !important;
+    }
+    
+    .mobile-card-table td.text-right::before {
+        display: none;
+    }
+    
+    /* Tombol aksi diregangkan agar mudah ditekan di HP */
+    .mobile-card-table .action-btns {
+        flex-direction: row;
+        gap: 0.5rem;
+        width: 100%;
+    }
+    
+    .mobile-card-table .action-btns .btn {
+        width: auto;
+        flex: 1;
+        justify-content: center;
     }
 }
