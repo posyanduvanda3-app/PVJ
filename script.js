@@ -616,7 +616,7 @@ function renderDashboard() {
                 <div>
                     <span class="text-xs font-bold text-slate-400 uppercase block">Periksa Hari Ini</span>
                     <span class="text-3xl font-black text-slate-800 mt-1 block">${stats.checkupsToday}</span>
-                    <span class="text-xs text-amber-600 font-bold mt-1 inline-flex items-center">Antrean Berjalan</span>
+                    <span class="text-xs text-amber-600 font-bold mt-1 inline-flex items-center">Antrian Berjalan</span>
                 </div>
                 <div class="stat-icon bg-amber-50 text-amber-600">${icons.clipboard}</div>
             </div>
