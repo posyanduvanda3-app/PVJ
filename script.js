@@ -714,8 +714,6 @@ function renderDashboard() {
 
 function renderPeserta() {
     const searchVal = state.filters.peserta.search;
-    
-    // ✅ PENCARIAN PROFESIONAL: Gabungkan semua field menjadi satu string untuk pencocokan yang akurat
     const filtered = state.pesertaList.filter(p => {
         const searchableText = `${p.no_registrasi} ${p.nik} ${p.nama} ${p.nama_orang_tua || ''} ${p.alamat || ''} ${p.rt || ''} ${p.rw || ''} ${p.no_hp || ''}`.toLowerCase();
         const matchSearch = !searchVal || searchableText.includes(searchVal);
@@ -729,28 +727,20 @@ function renderPeserta() {
     return `
         <div class="card flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div class="filter-bar flex-1 w-full md:w-auto">
-                
-                <!-- ⚠️ WRAPPER 'relative' INI WAJIB ADA agar ikon tetap di DALAM input -->
                 <div class="relative w-full md:max-w-md">
-                    <!-- 1. Ikon Kaca Pembesar (Kiri) -->
                     <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                     </div>
-                    
-                    <!-- 2. Input Field (Padding kanan dinamis agar teks tidak menabrak ikon hapus) -->
                     <input type="text" id="filter-peserta-search" class="form-input" 
                            style="padding-left: 2.5rem; padding-right: ${searchVal ? '2.5rem' : '0.75rem'};" 
                            placeholder="Cari Nama, NIK, No. HP, atau Alamat..." 
                            value="${searchVal}">
-                    
-                    <!-- 3. Tombol Hapus (Kanan, Hanya muncul jika ada teks) -->
                     ${searchVal ? `
                     <button type="button" id="clear-peserta-search" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 transition-colors z-10" title="Hapus Pencarian">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                     ` : ''}
                 </div>
-                
                 <select id="filter-peserta-kat" class="form-input mt-2 md:mt-0" style="max-width: 12rem;">
                     <option value="Semua" ${state.filters.peserta.kategori === 'Semua' ? 'selected' : ''}>Semua Kategori</option>
                     <option value="Ibu Hamil" ${state.filters.peserta.kategori === 'Ibu Hamil' ? 'selected' : ''}>Ibu Hamil</option>
@@ -762,9 +752,13 @@ function renderPeserta() {
             </div>
             ${!isReadOnly() ? `<button class="btn btn-primary whitespace-nowrap" data-action="add-peserta">${icons.plus} Daftarkan Peserta</button>` : ''}
         </div>
-        
-        <div class="card p-0 overflow-x-auto">
-            <table class="data-table">
+        <div class="card p-0 overflow-hidden">
+            <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                <span class="text-xs font-bold text-slate-400 uppercase">Data Peserta Terdaftar</span>
+                <p class="text-xs font-medium text-slate-500">${filtered.length} peserta</p>
+            </div>
+            <!-- ⚠️ TAMBAHKAN CLASS 'mobile-card-table' DI SINI -->
+            <table class="data-table mobile-card-table">
                 <thead>
                     <tr>
                         <th>No. Reg / NIK</th>
@@ -778,11 +772,11 @@ function renderPeserta() {
                 <tbody>
                     ${filtered.length ? filtered.map(p => `
                         <tr>
-                            <td>
+                            <td data-label="No. Reg / NIK">
                                 <span class="font-bold text-slate-800 block">${p.no_registrasi}</span>
                                 <span class="text-xs text-slate-400 font-mono">NIK: ${p.nik}</span>
                             </td>
-                            <td>
+                            <td data-label="Nama Lengkap">
                                 <span class="font-bold text-slate-800 block">${p.nama}</span>
                                 ${p.kategori === 'Balita' && p.nama_orang_tua ? `
                                 <span class="inline-flex items-center gap-1 mt-1 text-xs text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
@@ -790,11 +784,11 @@ function renderPeserta() {
                                     Ortu: <b>${p.nama_orang_tua}</b>
                                 </span>` : ''}
                             </td>
-                            <td>
+                            <td data-label="Kategori">
                                 <span class="badge ${p.kategori === 'Balita' ? 'badge-rose' : p.kategori === 'Ibu Hamil' ? 'badge-emerald' : p.kategori === 'Lansia' ? 'badge-blue' : 'badge-slate'}">${p.kategori}</span>
                             </td>
                             ${hasBalita ? `
-                            <td>
+                            <td data-label="BB / TB Lahir">
                                 ${p.kategori === 'Balita' ? `
                                     <div class="text-xs space-y-0.5">
                                         <span class="block text-slate-700">BB: <b>${p.bb_lahir || '-'} kg</b></span>
@@ -802,11 +796,12 @@ function renderPeserta() {
                                     </div>
                                 ` : '<span class="text-xs text-slate-400 italic">-</span>'}
                             </td>` : ''}
-                            <td>
+                            <td data-label="Umur & Gender">
                                 <span class="block text-slate-800">${calculateAge(p.tanggal_lahir)}</span>
                                 <span class="text-xs text-slate-400">${p.jenis_kelamin}</span>
                             </td>
-                            <td class="text-right">
+                            <!-- ⚠️ KOLOM AKSI: Gunakan class 'text-right' agar CSS mobile merapikan tombolnya -->
+                            <td class="text-right" data-label="Aksi">
                                 <div class="action-btns">
                                     <button class="btn btn-secondary text-xs" data-action="periksa" data-id="${p.id}" ${isReadOnly() ? 'disabled' : ''}>Periksa</button>
                                     ${!isReadOnly() ? `
@@ -1031,7 +1026,7 @@ function attachViewEvents() {
             searchTimeout = setTimeout(() => {
                 state.filters.peserta.search = e.target.value.trim().toLowerCase();
                 renderView();
-            }, 1500); // Tunggu 1500ms setelah user berhenti mengetik
+            }, 1200); // Tunggu 1200ms setelah user berhenti mengetik
         });
     }
 
@@ -1055,7 +1050,7 @@ function attachViewEvents() {
             searchTimeout = setTimeout(() => {
                 state.filters.riwayat.search = e.target.value.trim().toLowerCase();
                 renderView(); // Render ulang HANYA setelah user berhenti mengetik
-            }, 1500); // Delay 1500ms (konsisten dengan Data Peserta)
+            }, 1500); // Delay 1200ms (konsisten dengan Data Peserta)
         });
     }
 
