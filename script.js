@@ -823,7 +823,6 @@ function renderPeserta() {
 function renderRiwayat() {
     const searchVal = state.filters.riwayat.search;
     const filtered = state.pemeriksaanList.filter(p => {
-        // Perbaikan: Cek apakah searchVal ada sebelum melakukan toLowerCase agar tidak error jika kosong
         const matchSearch = !searchVal || p.nama_peserta.toLowerCase().includes(searchVal.toLowerCase());
         const matchKat = state.filters.riwayat.kategori === 'Semua' || p.kategori === state.filters.riwayat.kategori;
         const matchTgl = !state.filters.riwayat.tanggal || p.tanggal === state.filters.riwayat.tanggal;
@@ -832,18 +831,15 @@ function renderRiwayat() {
 
     return `
         <div class="card filter-bar">
-            <!-- WRAPPER PENCARIAN PROFESIONAL (SAMA SEPERTI DATA PESERTA) -->
+            <!-- WRAPPER PENCARIAN PROFESIONAL (Sama seperti Data Peserta) -->
             <div class="relative w-full md:max-w-md">
-                <!-- 1. Ikon Kaca Pembesar (Kiri) -->
                 <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                 </div>
-                <!-- 2. Input Field (Padding dinamis) -->
                 <input type="text" id="filter-riwayat-search" class="form-input" 
                        style="padding-left: 2.5rem; padding-right: ${searchVal ? '2.5rem' : '0.75rem'};" 
                        placeholder="Cari Nama Peserta..." 
                        value="${searchVal}">
-                <!-- 3. Tombol Hapus (Kanan, Hanya muncul jika ada teks) -->
                 ${searchVal ? `
                 <button type="button" id="clear-riwayat-search" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 transition-colors z-10" title="Hapus Pencarian">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -866,26 +862,49 @@ function renderRiwayat() {
                 <span class="text-xs font-bold text-slate-400 uppercase">Rekam Medis Terkini</span>
                 <p class="text-xs font-medium text-slate-500">${filtered.length} transaksi</p>
             </div>
-            <table class="data-table">
-                <thead><tr><th>Tanggal / ID</th><th>Peserta</th><th>Kategori</th><th>Vital Signs</th><th>Diagnosa</th><th class="text-right">Aksi</th></tr></thead>
+            
+            <!-- ⚠️ PENTING: Class 'mobile-card-table' WAJIB ADA di sini agar CSS responsif bekerja -->
+            <table class="data-table mobile-card-table">
+                <thead>
+                    <tr>
+                        <th>Tanggal / ID</th>
+                        <th>Peserta</th>
+                        <th>Kategori</th>
+                        <th>Vital Signs</th>
+                        <th>Diagnosa</th>
+                        <th class="text-right">Aksi</th>
+                    </tr>
+                </thead>
                 <tbody>
                     ${filtered.length ? filtered.map(p => `
                         <tr>
-                            <td><span class="font-bold text-slate-800 block">${new Date(p.tanggal).toLocaleDateString('id-ID')}</span><span class="text-xs text-slate-400 font-mono">${p.id}</span></td>
-                            <td><span class="font-bold text-slate-800 block">${p.nama_peserta}</span><span class="text-xs text-slate-400">${p.peserta_id}</span></td>
-                            <td><span class="badge ${p.kategori === 'Balita' ? 'badge-rose' : p.kategori === 'Ibu Hamil' ? 'badge-emerald' : 'badge-blue'}">${p.kategori}</span></td>
-                            <td class="text-xs space-y-1">
+                            <!-- ⚠️ PENTING: Atribut 'data-label' WAJIB ADA di setiap <td> -->
+                            <td data-label="Tanggal / ID">
+                                <span class="font-bold text-slate-800 block">${new Date(p.tanggal).toLocaleDateString('id-ID')}</span>
+                                <span class="text-xs text-slate-400 font-mono">${p.id}</span>
+                            </td>
+                            <td data-label="Peserta">
+                                <span class="font-bold text-slate-800 block">${p.nama_peserta}</span>
+                                <span class="text-xs text-slate-400">${p.peserta_id}</span>
+                            </td>
+                            <td data-label="Kategori">
+                                <span class="badge ${p.kategori === 'Balita' ? 'badge-rose' : p.kategori === 'Ibu Hamil' ? 'badge-emerald' : 'badge-blue'}">${p.kategori}</span>
+                            </td>
+                            <td data-label="Vital Signs" class="text-xs space-y-1">
                                 <div>BB: <b>${p.berat_badan} kg</b></div>
                                 <div>TB: <b>${p.tinggi_badan} cm</b></div>
                                 ${p.tekanan_darah ? `<div>TD: <b>${p.tekanan_darah}</b></div>` : ''}
                                 ${p.lingkar_perut ? `<div>L.Perut: <b>${p.lingkar_perut} cm</b></div>` : ''}
                                 ${p.lingkar_lengan_atas ? `<div>LiLA: <b>${p.lingkar_lengan_atas} cm</b></div>` : ''}
                             </td>
-                            <td><span class="font-bold text-slate-800 block truncate max-w-xs">${p.diagnosa}</span></td>
-                            <td class="text-right">
+                            <td data-label="Diagnosa">
+                                <span class="font-bold text-slate-800 block">${p.diagnosa}</span>
+                            </td>
+                            <!-- ⚠️ Class 'text-right' agar tombol aksi rapi di mobile -->
+                            <td class="text-right" data-label="Aksi">
                                 <div class="action-btns">
-                                    <button class="btn btn-secondary text-xs" data-action="detail-pem" data-id="${p.id}">${icons.eye} Detail</button>
-                                    <button class="btn btn-primary text-xs" data-action="cetak-pem" data-id="${p.id}">${icons.printer} Cetak</button>
+                                    <button class="btn btn-secondary text-xs whitespace-nowrap" data-action="detail-pem" data-id="${p.id}">${icons.eye} Detail</button>
+                                    <button class="btn btn-primary text-xs whitespace-nowrap" data-action="cetak-pem" data-id="${p.id}">${icons.printer} Cetak</button>
                                 </div>
                             </td>
                         </tr>
