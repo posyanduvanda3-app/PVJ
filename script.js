@@ -904,7 +904,7 @@ function renderRiwayat() {
                             <td class="text-right" data-label="Aksi">
                                 <div class="action-btns">
                                     <button class="btn btn-secondary text-xs whitespace-nowrap" data-action="detail-pem" data-id="${p.id}">${icons.eye} Detail</button>
-                                    <button class="btn btn-primary text-xs whitespace-nowrap" data-action="cetak-pem" data-id="${p.id}">${icons.printer} Cetak</button>
+                                    <button class="btn btn-neon text-xs" data-action="cetak-pem" data-id="${p.id}">${icons.printer} Cetak</button>
                                 </div>
                             </td>
                         </tr>
@@ -966,8 +966,12 @@ function renderLaporan() {
 function renderJadwal() {
     return `
         <div class="card flex flex-col md:flex-row justify-between items-center gap-4">
-            <div><h4 class="text-base font-bold text-slate-800">Jadwal Agenda Posyandu</h4><p class="text-xs text-slate-400 mt-1">Daftar agenda kegiatan rutin berikutnya.</p></div>
-            ${!isReadOnly() ? `<button class="btn btn-primary text-xs" data-action="add-jadwal">${icons.plus} Terbitkan Agenda</button>` : ''}
+            <div>
+                <h4 class="text-base font-bold text-slate-800">Jadwal Agenda Posyandu</h4>
+                <p class="text-xs text-slate-400 mt-1">Daftar agenda kegiatan rutin berikutnya.</p>
+            </div>
+            <!-- ⚠️ PERBAIKAN: Hapus spasi berlebih di dalam atribut class dan data-action -->
+            ${!isReadOnly() ? `<button class="btn btn-neon text-xs" data-action="add-jadwal">${icons.plus} Terbitkan Agenda</button>` : ''}
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             ${state.jadwalList.map(j => `
@@ -1230,8 +1234,9 @@ function openPesertaModal(id = null) {
 
             <div class="modal-footer -mx-6 -mb-6 mt-8 pt-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl sticky bottom-0">
                 <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
-                <button type="submit" class="btn btn-primary">Simpan Data</button>
+                <button type="submit" class="btn btn-neon">Simpan Data</button>
             </div>
+
         </form>
     `;
     
@@ -1563,8 +1568,9 @@ function openPemeriksaanModal(pesertaId) {
                     <div class="form-group"><label class="form-label">Rujukan?</label><select id="pem-rujukan" class="form-input"><option value="Tidak">Tidak Perlu</option><option value="Ya">Ya, Rujuk</option></select></div>
                 </div>
             </div>
-            <div class="modal-footer -m-6 mt-4 rounded-b-2xl"><button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button><button type="submit" class="btn btn-primary">Simpan Pemeriksaan</button></div>
-        </form>
+            <div class="modal-footer -m-6 mt-4 rounded-b-2xl"><button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button><button type="submit" class="btn btn-neon">Simpan Pemeriksaan</button></div>
+
+            </form>
     `;
     openModal(html);
 
@@ -1675,7 +1681,7 @@ function openDetailModal(id) {
             </div>
             <div class="pt-8 grid grid-cols-2 text-xs text-center"><div></div><div class="space-y-12"><p>Petugas Posyandu,</p><p class="font-bold text-slate-800 underline">${p.petugas}</p></div></div>
         </div>
-        <div class="modal-footer no-print"><button class="btn btn-secondary" onclick="closeModal()">Tutup</button><button class="btn btn-primary" onclick="window.print()">Cetak</button></div>
+        <div class="modal-footer no-print"><button class="btn btn-secondary" onclick="closeModal()">Tutup</button><button class="btn btn-neon" onclick="window.print()">Cetak</button></div>
     `;
     openModal(html);
 }
@@ -1683,49 +1689,72 @@ function openDetailModal(id) {
 // --- JADWAL MODAL ---
 function openJadwalModal() {
     const html = `
-        <div class="modal-header"><h3 class="text-lg font-black text-slate-800">Terbitkan Agenda</h3><button class="btn-icon" onclick="closeModal()">${icons.close}</button></div>
+        <div class="modal-header">
+            <h3 class="text-lg font-black text-slate-800">Terbitkan Agenda</h3>
+            <button class="btn-icon" onclick="closeModal()">${icons.close}</button>
+        </div>
         <form id="form-jadwal" class="modal-body">
-            <div class="form-group"><label class="form-label">Tanggal</label><input type="date" id="j-tgl" class="form-input" required></div>
-            <div class="form-group"><label class="form-label">Lokasi</label><input type="text" id="j-lok" class="form-input" placeholder="Balai RW 04" required></div>
-            <div class="grid grid-cols-2 gap-4"><div class="form-group"><label class="form-label">Jam Mulai</label><input type="time" id="j-mulai" class="form-input" required></div><div class="form-group"><label class="form-label">Jam Selesai</label><input type="time" id="j-selesai" class="form-input" required></div></div>
-            <div class="modal-footer -m-6 mt-4 rounded-b-2xl"><button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button><button type="submit" class="btn btn-primary">Publikasikan</button></div>
+            <div class="form-group">
+                <label class="form-label">Tanggal</label>
+                <input type="date" id="j-tgl" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Lokasi</label>
+                <input type="text" id="j-lok" class="form-input" placeholder="Balai RW 04" required>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="form-group">
+                    <label class="form-label">Jam Mulai</label>
+                    <input type="time" id="j-mulai" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Jam Selesai</label>
+                    <input type="time" id="j-selesai" class="form-input" required>
+                </div>
+            </div>
+            <div class="modal-footer -m-6 mt-4 rounded-b-2xl">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
+                <!-- ⚠️ PERBAIKAN: Ganti btn-primary menjadi btn-neon -->
+                <button type="submit" class="btn btn-neon">Publikasikan</button>
+            </div>
         </form>
     `;
     openModal(html);
-    document.getElementById('form-jadwal').onsubmit = async (e) => {
-    e.preventDefault();
-    const newJadwal = {
-        id: Date.now().toString(),
-        tanggal: document.getElementById('j-tgl').value,
-        lokasi: document.getElementById('j-lok').value,
-        jam_mulai: document.getElementById('j-mulai').value,
-        jam_selesai: document.getElementById('j-selesai').value
-    };
     
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    submitBtn.innerText = 'Menyimpan...';
-    submitBtn.disabled = true;
-
-    try {
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'addJadwal', ...newJadwal })
-        });
-        const result = await response.json();
+    document.getElementById('form-jadwal').onsubmit = async (e) => {
+        e.preventDefault();
+        const newJadwal = {
+            id: Date.now().toString(),
+            tanggal: document.getElementById('j-tgl').value,
+            lokasi: document.getElementById('j-lok').value,
+            jam_mulai: document.getElementById('j-mulai').value,
+            jam_selesai: document.getElementById('j-selesai').value
+        };
         
-        if (result.status === 'success') {
-            state.jadwalList.unshift(newJadwal);
-            addAuditLog('Terbitkan jadwal baru');
-            showToast('Jadwal diterbitkan dan disimpan!');
-            closeModal();
-            renderView();
-        } else {
-            showToast('Gagal: ' + result.message, 'error');
-        }
-    } catch (error) {
-        showToast('Terjadi kesalahan koneksi ke database.', 'error');
-    }   finally {
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        submitBtn.innerText = 'Menyimpan...';
+        submitBtn.disabled = true;
+
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: 'addJadwal', ...newJadwal })
+            });
+            const result = await response.json();
+            
+            if (result.status === 'success') {
+                state.jadwalList.unshift(newJadwal);
+                addAuditLog('Terbitkan jadwal baru');
+                showToast('Jadwal diterbitkan dan disimpan!');
+                closeModal();
+                renderView();
+            } else {
+                showToast('Gagal: ' + result.message, 'error');
+            }
+        } catch (error) {
+            showToast('Terjadi kesalahan koneksi ke database.', 'error');
+        } finally {
             submitBtn.innerText = 'Publikasikan';
             submitBtn.disabled = false;
         }
