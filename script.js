@@ -750,7 +750,7 @@ function renderPeserta() {
                     <option value="Lansia" ${state.filters.peserta.kategori === 'Lansia' ? 'selected' : ''}>Lansia</option>
                 </select>
             </div>
-            ${!isReadOnly() ? `<button class="btn btn-primary whitespace-nowrap" data-action="add-peserta">${icons.plus} Daftarkan Peserta</button>` : ''}
+            ${!isReadOnly() ? `<button class="btn btn-neon whitespace-nowrap" data-action="add-peserta">${icons.plus} Daftarkan Peserta</button>` : ''}
         </div>
         <div class="card p-0 overflow-hidden">
             <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
@@ -803,7 +803,7 @@ function renderPeserta() {
                             <!-- ⚠️ KOLOM AKSI: Gunakan class 'text-right' agar CSS mobile merapikan tombolnya -->
                             <td class="text-right" data-label="Aksi">
                                 <div class="action-btns">
-                                    <button class="btn btn-secondary text-xs" data-action="periksa" data-id="${p.id}" ${isReadOnly() ? 'disabled' : ''}>Periksa</button>
+                                    <button class="btn btn-neon text-xs" data-action="periksa" data-id="${p.id}" ${isReadOnly() ? 'disabled' : ''}>Periksa</button>
                                     ${!isReadOnly() ? `
                                         <button class="btn-icon" data-action="edit-peserta" data-id="${p.id}" title="Edit">${icons.edit}</button>
                                         <button class="btn-icon text-rose-500 hover:text-rose-700" data-action="delete-peserta" data-id="${p.id}" data-nama="${p.nama}" title="Hapus">${icons.trash}</button>
