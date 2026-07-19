@@ -1333,3 +1333,71 @@ RESPONSIVE TABLE CARD VIEW (MOBILE)
         justify-content: center;
     }
 }
+
+/* ==========================================
+TOMBOL NEON EFFECT (KHUSUS TOMBOL AKSI UTAMA)
+========================================== */
+.btn-neon {
+    position: relative;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    color: white !important;
+    border: 1px solid rgba(16, 185, 129, 0.5) !important;
+    box-shadow: 
+        0 0 8px rgba(16, 185, 129, 0.4),
+        0 0 16px rgba(16, 185, 129, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    font-weight: 700;
+}
+
+/* Efek kilau (shimmer) saat hover */
+.btn-neon::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
+    transition: left 0.6s ease;
+}
+
+/* Hover: Neon menyala lebih terang + tombol terangkat + shimmer berjalan */
+.btn-neon:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 
+        0 0 12px rgba(16, 185, 129, 0.7),
+        0 0 24px rgba(16, 185, 129, 0.5),
+        0 0 36px rgba(16, 185, 129, 0.3),
+        0 8px 16px -4px rgba(16, 185, 129, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+}
+
+.btn-neon:hover::before {
+    left: 100%;
+}
+
+/* Active: Efek "ditekan" saat diklik */
+.btn-neon:active {
+    transform: translateY(0) scale(0.97);
+    box-shadow: 
+        0 0 6px rgba(16, 185, 129, 0.6),
+        0 0 12px rgba(16, 185, 129, 0.4),
+        inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+    transition: all 0.1s ease;
+}
+
+/* Disabled: Tampilan redup jika user tidak punya akses (Ketua Posyandu) */
+.btn-neon:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--slate-400) !important;
+    border-color: var(--slate-300) !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+.btn-neon:disabled::before {
+    display: none;
+}
