@@ -118,7 +118,7 @@ const logo_posyandu = 'Images/logo_posyandu.png';
 // ==========================================
 // 1. KONFIGURASI API (GANTI DENGAN URL DEPLOYMENT ANDA)
 // ==========================================
-const API_URL = 'https://script.google.com/macros/s/AKfycbw1mo6sU-0ez76Qnnl89ofhw7YTxSWnXnD7ICVIt06ojebjkThWHYFPb8rdblGgOKJD/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbyuMWQ8o1Gcdf3DTmsvbpBcZhAm3S8y4_9WdVoAAC7bZoOZP51_r41D-G1X4GoRgj7p/exec';
 
 // State awal masih kosong, akan diisi dari Spreadsheet
 const state = {
@@ -965,30 +965,36 @@ function renderLaporan() {
 
 function renderJadwal() {
     return `
-        <div class="card flex flex-col md:flex-row justify-between items-center gap-4">
+    <div class="card flex flex-col md:flex-row justify-between items-center gap-4">
+        <div>
+            <h4 class="text-base font-bold text-slate-800">Jadwal Agenda Posyandu</h4>
+            <p class="text-xs text-slate-400 mt-1">Daftar agenda kegiatan rutin berikutnya.</p>
+        </div>
+        ${!isReadOnly() ? `<button class="btn btn-neon text-xs" data-action="add-jadwal">${icons.plus} Terbitkan Agenda</button>` : ''}
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        ${state.jadwalList.map(j => `
+        <div class="card flex flex-col justify-between relative border-l-4 border-l-emerald-500">
             <div>
-                <h4 class="text-base font-bold text-slate-800">Jadwal Agenda Posyandu</h4>
-                <p class="text-xs text-slate-400 mt-1">Daftar agenda kegiatan rutin berikutnya.</p>
-            </div>
-            <!-- ⚠️ PERBAIKAN: Hapus spasi berlebih di dalam atribut class dan data-action -->
-            ${!isReadOnly() ? `<button class="btn btn-neon text-xs" data-action="add-jadwal">${icons.plus} Terbitkan Agenda</button>` : ''}
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            ${state.jadwalList.map(j => `
-                <div class="card flex flex-col justify-between relative">
-                    <div>
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="px-2.5 py-1 text-xs font-bold text-emerald-800 bg-emerald-50 rounded-lg">${new Date(j.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-                            ${!isReadOnly() ? `<button class="btn-icon text-rose-500" data-action="delete-jadwal" data-id="${j.id}">${icons.trash}</button>` : ''}
-                        </div>
-                        <p class="text-xs text-slate-400 font-bold uppercase mb-1">LOKASI:</p>
-                        <p class="text-sm font-bold text-slate-800 mb-3">${j.lokasi}</p>
-                        <div class="flex items-center gap-2 text-xs font-bold text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg w-fit">${icons.clock} <span>Pukul: ${j.jam_mulai} - ${j.jam_selesai} WIB</span></div>
-                    </div>
+                <div class="flex items-center justify-between mb-3">
+                    <span class="px-2.5 py-1 text-xs font-bold text-emerald-800 bg-emerald-50 rounded-lg">
+                        ${new Date(j.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    </span>
+                    ${!isReadOnly() ? `
+                    <div class="flex gap-1">
+                        <button class="btn-icon text-blue-500 hover:text-blue-700 hover:bg-blue-50" data-action="edit-jadwal" data-id="${j.id}" title="Edit Jadwal">${icons.edit}</button>
+                        <button class="btn-icon text-rose-500 hover:text-rose-700 hover:bg-rose-50" data-action="delete-jadwal" data-id="${j.id}" title="Hapus Jadwal">${icons.trash}</button>
+                    </div>` : ''}
                 </div>
-            `).join('')}
+                <p class="text-xs text-slate-400 font-bold uppercase mb-1">LOKASI:</p>
+                <p class="text-sm font-bold text-slate-800 mb-3">${j.lokasi}</p>
+                <div class="flex items-center gap-2 text-xs font-bold text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg w-fit">
+                    ${icons.clock} <span>Pukul: ${j.jam_mulai} - ${j.jam_selesai} WIB</span>
+                </div>
+            </div>
         </div>
-    `;
+        `).join('')}
+    </div>`;
 }
 
 function renderUser() {
@@ -1111,6 +1117,7 @@ function attachViewEvents() {
         else if (action === 'detail-pem') openDetailModal(id);
         else if (action === 'cetak-pem') { openDetailModal(id); setTimeout(() => window.print(), 300); }
         else if (action === 'add-jadwal') openJadwalModal();
+        else if (action === 'edit-jadwal') openJadwalModal(id);
         else if (action === 'delete-jadwal') deleteJadwal(id);
         else if (action === 'add-user') openUserModal();
         else if (action === 'edit-user') openUserModal(id);
@@ -1687,66 +1694,75 @@ function openDetailModal(id) {
 }
 
 // --- JADWAL MODAL ---
-function openJadwalModal() {
+function openJadwalModal(id = null) {
+    const j = id ? state.jadwalList.find(x => String(x.id) === String(id)) : null;
+    const isEdit = !!j;
+    
     const html = `
-        <div class="modal-header">
-            <h3 class="text-lg font-black text-slate-800">Terbitkan Agenda</h3>
-            <button class="btn-icon" onclick="closeModal()">${icons.close}</button>
+    <div class="modal-header">
+        <h3 class="text-lg font-black text-slate-800">${isEdit ? 'Edit' : 'Terbitkan'} Agenda</h3>
+        <button class="btn-icon" onclick="closeModal()">${icons.close}</button>
+    </div>
+    <form id="form-jadwal" class="modal-body">
+        <div class="form-group">
+            <label class="form-label">Tanggal</label>
+            <input type="date" id="j-tgl" class="form-input" value="${isEdit ? j.tanggal : ''}" required>
         </div>
-        <form id="form-jadwal" class="modal-body">
+        <div class="form-group">
+            <label class="form-label">Lokasi</label>
+            <input type="text" id="j-lok" class="form-input" placeholder="Contoh: Balai RW 04" value="${isEdit ? j.lokasi : ''}" required>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
             <div class="form-group">
-                <label class="form-label">Tanggal</label>
-                <input type="date" id="j-tgl" class="form-input" required>
+                <label class="form-label">Jam Mulai</label>
+                <input type="time" id="j-mulai" class="form-input" value="${isEdit ? j.jam_mulai : ''}" required>
             </div>
             <div class="form-group">
-                <label class="form-label">Lokasi</label>
-                <input type="text" id="j-lok" class="form-input" placeholder="Balai RW 04" required>
+                <label class="form-label">Jam Selesai</label>
+                <input type="time" id="j-selesai" class="form-input" value="${isEdit ? j.jam_selesai : ''}" required>
             </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div class="form-group">
-                    <label class="form-label">Jam Mulai</label>
-                    <input type="time" id="j-mulai" class="form-input" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Jam Selesai</label>
-                    <input type="time" id="j-selesai" class="form-input" required>
-                </div>
-            </div>
-            <div class="modal-footer -m-6 mt-4 rounded-b-2xl">
-                <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
-                <!-- ⚠️ PERBAIKAN: Ganti btn-primary menjadi btn-neon -->
-                <button type="submit" class="btn btn-neon">Publikasikan</button>
-            </div>
-        </form>
-    `;
+        </div>
+        <div class="modal-footer -m-6 mt-4 rounded-b-2xl">
+            <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
+            <button type="submit" class="btn btn-neon">${isEdit ? 'Simpan Perubahan' : 'Publikasikan'}</button>
+        </div>
+    </form>`;
     openModal(html);
     
     document.getElementById('form-jadwal').onsubmit = async (e) => {
         e.preventDefault();
-        const newJadwal = {
-            id: Date.now().toString(),
+        const payload = {
+            id: isEdit ? j.id : Date.now().toString(),
             tanggal: document.getElementById('j-tgl').value,
             lokasi: document.getElementById('j-lok').value,
             jam_mulai: document.getElementById('j-mulai').value,
             jam_selesai: document.getElementById('j-selesai').value
         };
         
+        const actionType = isEdit ? 'updateJadwal' : 'addJadwal';
         const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerText;
         submitBtn.innerText = 'Menyimpan...';
         submitBtn.disabled = true;
-
+        
         try {
             const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'addJadwal', ...newJadwal })
+                body: JSON.stringify({ action: actionType, ...payload })
             });
             const result = await response.json();
-            
             if (result.status === 'success') {
-                state.jadwalList.unshift(newJadwal);
-                addAuditLog('Terbitkan jadwal baru');
-                showToast('Jadwal diterbitkan dan disimpan!');
+                if (isEdit) {
+                    // Update state lokal secara optimistik
+                    const index = state.jadwalList.findIndex(x => String(x.id) === String(j.id));
+                    if (index !== -1) state.jadwalList[index] = { ...state.jadwalList[index], ...payload };
+                    addAuditLog(`Edit jadwal agenda: ${payload.tanggal} di ${payload.lokasi}`);
+                } else {
+                    state.jadwalList.unshift(payload);
+                    addAuditLog('Terbitkan jadwal baru');
+                }
+                showToast(isEdit ? 'Jadwal berhasil diperbarui!' : 'Jadwal diterbitkan dan disimpan!');
                 closeModal();
                 renderView();
             } else {
@@ -1755,7 +1771,7 @@ function openJadwalModal() {
         } catch (error) {
             showToast('Terjadi kesalahan koneksi ke database.', 'error');
         } finally {
-            submitBtn.innerText = 'Publikasikan';
+            submitBtn.innerText = originalText;
             submitBtn.disabled = false;
         }
     };
