@@ -147,20 +147,22 @@ let searchTimeout;
 // Data cadangan jika koneksi ke Spreadsheet gagal/terlambat
 const INITIAL_DATA_USERS = [
     { id: 1, nama: 'Budi Juniansyah', username: 'admin', password: 'admin123', role: 'Admin', status: 'Aktif' },
-    { id: 2, nama: 'Siti Aminah', username: 'kader', password: 'kader123', role: 'Kader', status: 'Aktif' }
+    { id: 2, nama: 'Fulanah', username: 'kader', password: 'kader123', role: 'Kader', status: 'Aktif' }
 ];
 
 async function loadDatabaseFromSpreadsheet() {
     console.log("🔄 Memulai koneksi ke API...");
-    console.log(" API URL:", API_URL);
+    console.log("🔗 API URL:", API_URL);
+    
+    // 1. Set status loading ke true saat mulai
+    state.isLoading = true;
+    updateLoginButtonState();
     
     try {
         const response = await fetch(`${API_URL}?action=getAllData`);
-        
         if (!response.ok) {
             throw new Error(`HTTP Error: ${response.status} - ${response.statusText}`);
         }
-        
         const data = await response.json();
         console.log("✅ Data berhasil dimuat:", data);
         
@@ -170,30 +172,49 @@ async function loadDatabaseFromSpreadsheet() {
         state.jadwalList = (data.jadwal || []).reverse(); 
         state.logActivities = (data.logs || []).reverse();
         
+        // 2. Loading selesai, aktifkan kembali tombol login
+        state.isLoading = false;
+        updateLoginButtonState();
         renderApp(); 
         
     } catch (error) {
         console.error("❌ Error detail:", error);
-        console.error(" Response status:", error.status);
         
-        // Tampilkan pesan error yang lebih informatif
-        let errorMessage = 'Mode Offline: Menggunakan data lokal. ';
-        
-        if (error.message.includes('Failed to fetch')) {
-            errorMessage += 'API tidak dapat diakses. Periksa URL dan koneksi internet.';
-        } else if (error.message.includes('401') || error.message.includes('403')) {
-            errorMessage += 'Akses ditolak. Periksa setting "Who has access" di deployment.';
-        } else if (error.message.includes('404')) {
-            errorMessage += 'URL API tidak ditemukan. Periksa URL deployment.';
-        } else {
-            errorMessage += 'Periksa koneksi API.';
-        }
-        
-        showToast(errorMessage, 'error');
-        
-        // Fallback ke data lokal
+        // Fallback ke data lokal jika API gagal
         state.usersList = INITIAL_DATA_USERS;
+        
+        // 3. Loading selesai (meski error), aktifkan tombol login
+        state.isLoading = false;
+        updateLoginButtonState();
+        
+        // Tampilkan pesan error
+        showToast('Mode Offline: Menggunakan data lokal. Periksa koneksi API.', 'error');
         renderApp();
+    }
+}
+
+function updateLoginButtonState() {
+    const loginBtn = document.getElementById('login-submit-btn');
+    const loginForm = document.getElementById('login-form');
+    
+    if (loginBtn && loginForm) {
+        if (state.isLoading) {
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Memuat Data...
+            `;
+            loginForm.style.opacity = '0.7';
+            loginForm.style.pointerEvents = 'none'; // Mencegah klik saat loading
+        } else {
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = 'MASUK APLIKASI';
+            loginForm.style.opacity = '1';
+            loginForm.style.pointerEvents = 'auto';
+        }
     }
 }
 
@@ -335,6 +356,12 @@ function closeModal() {
 // ==========================================
 document.getElementById('login-form').addEventListener('submit', (e) => {
     e.preventDefault();
+     // ✅ CEK: Jika data masih dimuat, hentikan proses dan beri tahu pengguna
+    if (state.isLoading) {
+        showToast('Mohon tunggu, sistem sedang memuat data...', 'info');
+        return;
+    }
+    
     const username = document.getElementById('login-username').value.trim();
     const password = document.getElementById('login-password').value.trim();
     const errorEl = document.getElementById('login-error');
@@ -1788,7 +1815,7 @@ function openDeleteJadwalConfirmationModal(id) {
                 ${icons.trash}
             </div>
             <div>
-                <h3 class="text-lg font-black text-slate-800">Hapus Jadwal Agenda?</h3>
+                <h3 class="text-lg font-black text-slate-800">Hapus Jadwal Agenda ?</h3>
                 <p class="text-xs text-slate-400 mt-0.5">Tindakan ini tidak dapat dibatalkan.</p>
             </div>
         </div>
@@ -1796,7 +1823,7 @@ function openDeleteJadwalConfirmationModal(id) {
     </div>
     <div class="modal-body">
         <p class="text-sm text-slate-600 mb-4">
-            Anda yakin ingin menghapus jadwal pada tanggal <b>${new Date(j.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</b> di <b>"${j.lokasi}"</b>?
+            Anda yakin ingin menghapus jadwal pada tanggal <b>${new Date(j.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</b> di <b>"${j.lokasi}"</b> ?
         </p>
         <div class="bg-rose-50 border border-rose-100 rounded-xl p-4">
             <p class="text-xs text-rose-600 leading-relaxed">
@@ -1873,8 +1900,7 @@ function openUserModal(id = null) {
                     <label class="form-label">Role</label>
                     <select id="u-role" class="form-input">
                         <option value="Kader" ${u?.role === 'Kader' ? 'selected' : ''}>Kader</option>
-                        <option value="Admin" ${u?.role === 'Admin' ? 'selected' : ''}>Admin</option>
-                        <option value="Petugas Puskesmas" ${u?.role === 'Petugas Puskesmas' ? 'selected' : ''}>Petugas Puskesmas</option>
+                        <option value="Admin" ${u?.role === 'Admin' ? 'selected' : ''}>Admin</option>               
                     </select>
                 </div>
                 <div class="form-group">
