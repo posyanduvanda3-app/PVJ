@@ -118,7 +118,7 @@ const logo_posyandu = 'Images/logo_posyandu.png';
 // ==========================================
 // 1. KONFIGURASI API (GANTI DENGAN URL DEPLOYMENT ANDA)
 // ==========================================
-const API_URL = 'https://script.google.com/macros/s/AKfycbzqlkQ0lv76K_-NN5dpzHGdHDFzxYrp7zgSOAA1lx42dohpjj6sA8qFKnEW5VIumFOD/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbwS-ICG-w_QhnVikVuDEnHJUDtUDJ2pSEuREITsNBFdyJbvBmA7RxvVYsQQr8RDvOl_/exec';
 
 // State awal masih kosong, akan diisi dari Spreadsheet
 const state = {
