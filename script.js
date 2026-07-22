@@ -118,7 +118,7 @@ const logo_posyandu = 'Images/logo_posyandu.png';
 // ==========================================
 // 1. KONFIGURASI API (GANTI DENGAN URL DEPLOYMENT ANDA)
 // ==========================================
-const API_URL = 'https://script.google.com/macros/s/AKfycbyuMWQ8o1Gcdf3DTmsvbpBcZhAm3S8y4_9WdVoAAC7bZoOZP51_r41D-G1X4GoRgj7p/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbyj-QdamBMNsBsiNCuIoFTw4DlLaTl_gIHr1A-X5CIQzabPWJSP2aenw5HHJpOZuE87/exec';
 
 // State awal masih kosong, akan diisi dari Spreadsheet
 const state = {
@@ -1824,7 +1824,7 @@ function openDeleteJadwalConfirmationModal(id, tanggal, lokasi) {
     document.getElementById('btn-confirm-delete-jadwal').onclick = async () => {
         const btn = document.getElementById('btn-confirm-delete-jadwal');
         
-        // 1. Ubah tombol jadi state loading agar user tidak double-click
+        // 1. Ubah tombol jadi state loading
         btn.disabled = true;
         btn.innerHTML = `
             <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -1834,19 +1834,22 @@ function openDeleteJadwalConfirmationModal(id, tanggal, lokasi) {
             Memproses...
         `;
         
+        // 2. Pastikan ID dikirim sebagai string yang bersih (tanpa spasi)
+        const idToSend = String(id).trim();
+        console.log("🔍 Mengirim request hapus Jadwal dengan ID:", idToSend);
+        
         try {
             const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'deleteJadwal', id: String(id) })
+                body: JSON.stringify({ action: 'deleteJadwal', id: idToSend })
             });
             const result = await response.json();
+            console.log("📡 Respon dari Server:", result); // Lihat pesan error detail di Console
             
             if (result.status === 'success') {
-                // 2. Update state lokal secara optimistik (UI langsung berubah)
-                state.jadwalList = state.jadwalList.filter(j => String(j.id) !== String(id));
-                
-                // 3. Catat log dan tampilkan notifikasi sukses yang jelas
+                // Update state lokal
+                state.jadwalList = state.jadwalList.filter(j => String(j.id).trim() !== idToSend);
                 addAuditLog(`Hapus permanen jadwal: ${lokasi} (${tanggal})`);
                 closeModal();
                 showToast(`Jadwal di "${lokasi}" berhasil dihapus permanen.`, 'success');
@@ -1858,7 +1861,7 @@ function openDeleteJadwalConfirmationModal(id, tanggal, lokasi) {
                 btn.innerHTML = 'Ya, Hapus Permanen';
             }
         } catch (error) {
-            console.error('Error delete jadwal:', error);
+            console.error('❌ Error delete jadwal:', error);
             showToast('Terjadi kesalahan koneksi ke database. Silakan coba lagi.', 'error');
             btn.disabled = false;
             btn.innerHTML = 'Ya, Hapus Permanen';
