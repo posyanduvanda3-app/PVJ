@@ -118,7 +118,7 @@ const logo_posyandu = 'Images/logo_posyandu.png';
 // ==========================================
 // 1. KONFIGURASI API (GANTI DENGAN URL DEPLOYMENT ANDA)
 // ==========================================
-const API_URL = 'https://script.google.com/macros/s/AKfycbwvebuASwyBN633NxOOIjXzkeJU6ZfpVCg8dAZ8kUWHbpSEpen_yz0-KiiY6b3SRgoG/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbyGGAkKAEaleoeXgQzoyUwcTAOF6DS5ub2TkiAkUqyx1nJ0lR4RsgzWRIepl02jNd0c/exec';
 
 // State awal masih kosong, akan diisi dari Spreadsheet
 const state = {
@@ -1118,12 +1118,7 @@ function attachViewEvents() {
         else if (action === 'cetak-pem') { openDetailModal(id); setTimeout(() => window.print(), 300); }
         else if (action === 'add-jadwal') openJadwalModal();
         else if (action === 'edit-jadwal') openJadwalModal(id);
-        else if (action === 'delete-jadwal') {
-            const j = state.jadwalList.find(x => String(x.id) === String(id));
-            if (j) {
-                openDeleteJadwalConfirmationModal(j.id, j.tanggal, j.lokasi);
-            }
-        }
+        else if (action === 'delete-jadwal') openDeleteJadwalConfirmationModal(id);
         else if (action === 'add-user') openUserModal();
         else if (action === 'edit-user') openUserModal(id);
         else if (action === 'toggle-user') toggleUserStatus(id);
@@ -1759,7 +1754,6 @@ function openJadwalModal(id = null) {
             const result = await response.json();
             if (result.status === 'success') {
                 if (isEdit) {
-                    // Update state lokal secara optimistik
                     const index = state.jadwalList.findIndex(x => String(x.id) === String(j.id));
                     if (index !== -1) state.jadwalList[index] = { ...state.jadwalList[index], ...payload };
                     addAuditLog(`Edit jadwal agenda: ${payload.tanggal} di ${payload.lokasi}`);
@@ -1783,7 +1777,10 @@ function openJadwalModal(id = null) {
 }
 
 // --- FUNGSI KONFIRMASI HAPUS JADWAL (PROFESIONAL) ---
-function openDeleteJadwalConfirmationModal(id, tanggal, lokasi) {
+function openDeleteJadwalConfirmationModal(id) {
+    const j = state.jadwalList.find(x => String(x.id) === String(id));
+    if (!j) return;
+
     const html = `
     <div class="modal-header border-b border-slate-100">
         <div class="flex items-center gap-3">
@@ -1791,78 +1788,57 @@ function openDeleteJadwalConfirmationModal(id, tanggal, lokasi) {
                 ${icons.trash}
             </div>
             <div>
-                <h3 class="text-lg font-black text-slate-800">Konfirmasi Penghapusan Jadwal</h3>
+                <h3 class="text-lg font-black text-slate-800">Hapus Jadwal Agenda?</h3>
                 <p class="text-xs text-slate-400 mt-0.5">Tindakan ini tidak dapat dibatalkan.</p>
             </div>
         </div>
         <button class="btn-icon" onclick="closeModal()">${icons.close}</button>
     </div>
     <div class="modal-body">
-        <p class="text-sm text-slate-600 mb-4 text-center sm:text-left">
-            Anda yakin ingin menghapus agenda jadwal pada tanggal <b class="text-slate-800 text-base">${new Date(tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</b> di <b class="text-slate-800 text-base">"${lokasi}"</b>?
+        <p class="text-sm text-slate-600 mb-4">
+            Anda yakin ingin menghapus jadwal pada tanggal <b>${new Date(j.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</b> di <b>"${j.lokasi}"</b>?
         </p>
-        <div class="bg-rose-50 border border-rose-100 rounded-xl p-4 text-left">
-            <p class="text-xs font-bold text-rose-700 mb-1 flex items-center gap-1">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                PERINGATAN PENTING:
-            </p>
+        <div class="bg-rose-50 border border-rose-100 rounded-xl p-4">
             <p class="text-xs text-rose-600 leading-relaxed">
-                Data jadwal ini akan <b>dihapus secara permanen</b> dari database spreadsheet dan tidak dapat dikembalikan.
+                Data jadwal akan <b>dihapus permanen</b> dari database Spreadsheet.
             </p>
         </div>
     </div>
     <div class="modal-footer -mx-6 -mb-6 mt-4 pt-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl">
         <button type="button" class="btn btn-secondary flex-1 sm:flex-none" onclick="closeModal()">Batal</button>
-        <button type="button" id="btn-confirm-delete-jadwal" class="btn flex-1 sm:flex-none bg-rose-600 text-white hover:bg-rose-700 border-none shadow-md hover:shadow-lg transition-all">
+        <button type="button" id="btn-confirm-delete-jadwal" class="btn flex-1 sm:flex-none bg-rose-600 text-white hover:bg-rose-700 border-none shadow-md">
             Ya, Hapus Permanen
         </button>
     </div>`;
     
     openModal(html);
 
-    // Logika eksekusi penghapusan
     document.getElementById('btn-confirm-delete-jadwal').onclick = async () => {
         const btn = document.getElementById('btn-confirm-delete-jadwal');
-        
-        // 1. Ubah tombol jadi state loading
         btn.disabled = true;
-        btn.innerHTML = `
-            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg> 
-            Memproses...
-        `;
-        
-        // 2. Pastikan ID dikirim sebagai string yang bersih (tanpa spasi)
-        const idToSend = String(id).trim();
-        console.log("🔍 Mengirim request hapus Jadwal dengan ID:", idToSend);
+        btn.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Memproses...`;
         
         try {
             const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'deleteJadwal', id: idToSend })
+                body: JSON.stringify({ action: 'deleteJadwal', id: String(id).trim() })
             });
             const result = await response.json();
-            console.log("📡 Respon dari Server:", result); // Lihat pesan error detail di Console
             
             if (result.status === 'success') {
-                // Update state lokal
-                state.jadwalList = state.jadwalList.filter(j => String(j.id).trim() !== idToSend);
-                addAuditLog(`Hapus permanen jadwal: ${lokasi} (${tanggal})`);
+                state.jadwalList = state.jadwalList.filter(x => String(x.id) !== String(id));
+                addAuditLog(`Hapus permanen jadwal: ${j.lokasi}`);
                 closeModal();
-                showToast(`Jadwal di "${lokasi}" berhasil dihapus permanen.`, 'success');
+                showToast(`Jadwal di "${j.lokasi}" berhasil dihapus.`, 'success');
                 renderView();
             } else {
-                showToast('Gagal menghapus: ' + result.message, 'error');
-                // Kembalikan tombol ke keadaan semula jika gagal
+                showToast('Gagal: ' + result.message, 'error');
                 btn.disabled = false;
                 btn.innerHTML = 'Ya, Hapus Permanen';
             }
         } catch (error) {
-            console.error('❌ Error delete jadwal:', error);
-            showToast('Terjadi kesalahan koneksi ke database. Silakan coba lagi.', 'error');
+            showToast('Koneksi database terputus.', 'error');
             btn.disabled = false;
             btn.innerHTML = 'Ya, Hapus Permanen';
         }
