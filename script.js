@@ -1118,7 +1118,12 @@ function attachViewEvents() {
         else if (action === 'cetak-pem') { openDetailModal(id); setTimeout(() => window.print(), 300); }
         else if (action === 'add-jadwal') openJadwalModal();
         else if (action === 'edit-jadwal') openJadwalModal(id);
-        else if (action === 'delete-jadwal') deleteJadwal(id);
+        else if (action === 'delete-jadwal') {
+            const j = state.jadwalList.find(x => String(x.id) === String(id));
+            if (j) {
+                openDeleteJadwalConfirmationModal(j.id, j.tanggal, j.lokasi);
+            }
+        }
         else if (action === 'add-user') openUserModal();
         else if (action === 'edit-user') openUserModal(id);
         else if (action === 'toggle-user') toggleUserStatus(id);
@@ -1777,28 +1782,88 @@ function openJadwalModal(id = null) {
     };
 }
 
-async function deleteJadwal(id) {
-    if (confirm('Hapus jadwal ini?')) {
+// --- FUNGSI KONFIRMASI HAPUS JADWAL (PROFESIONAL) ---
+function openDeleteJadwalConfirmationModal(id, tanggal, lokasi) {
+    const html = `
+    <div class="modal-header border-b border-slate-100">
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0">
+                ${icons.trash}
+            </div>
+            <div>
+                <h3 class="text-lg font-black text-slate-800">Konfirmasi Penghapusan Jadwal</h3>
+                <p class="text-xs text-slate-400 mt-0.5">Tindakan ini tidak dapat dibatalkan.</p>
+            </div>
+        </div>
+        <button class="btn-icon" onclick="closeModal()">${icons.close}</button>
+    </div>
+    <div class="modal-body">
+        <p class="text-sm text-slate-600 mb-4 text-center sm:text-left">
+            Anda yakin ingin menghapus agenda jadwal pada tanggal <b class="text-slate-800 text-base">${new Date(tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</b> di <b class="text-slate-800 text-base">"${lokasi}"</b>?
+        </p>
+        <div class="bg-rose-50 border border-rose-100 rounded-xl p-4 text-left">
+            <p class="text-xs font-bold text-rose-700 mb-1 flex items-center gap-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                PERINGATAN PENTING:
+            </p>
+            <p class="text-xs text-rose-600 leading-relaxed">
+                Data jadwal ini akan <b>dihapus secara permanen</b> dari database spreadsheet dan tidak dapat dikembalikan.
+            </p>
+        </div>
+    </div>
+    <div class="modal-footer -mx-6 -mb-6 mt-4 pt-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl">
+        <button type="button" class="btn btn-secondary flex-1 sm:flex-none" onclick="closeModal()">Batal</button>
+        <button type="button" id="btn-confirm-delete-jadwal" class="btn flex-1 sm:flex-none bg-rose-600 text-white hover:bg-rose-700 border-none shadow-md hover:shadow-lg transition-all">
+            Ya, Hapus Permanen
+        </button>
+    </div>`;
+    
+    openModal(html);
+
+    // Logika eksekusi penghapusan
+    document.getElementById('btn-confirm-delete-jadwal').onclick = async () => {
+        const btn = document.getElementById('btn-confirm-delete-jadwal');
+        
+        // 1. Ubah tombol jadi state loading agar user tidak double-click
+        btn.disabled = true;
+        btn.innerHTML = `
+            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg> 
+            Memproses...
+        `;
+        
         try {
             const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'deleteJadwal', id: id })
+                body: JSON.stringify({ action: 'deleteJadwal', id: String(id) })
             });
             const result = await response.json();
             
             if (result.status === 'success') {
+                // 2. Update state lokal secara optimistik (UI langsung berubah)
                 state.jadwalList = state.jadwalList.filter(j => String(j.id) !== String(id));
-                addAuditLog('Hapus jadwal');
-                showToast('Jadwal dihapus dari database.', 'info');
+                
+                // 3. Catat log dan tampilkan notifikasi sukses yang jelas
+                addAuditLog(`Hapus permanen jadwal: ${lokasi} (${tanggal})`);
+                closeModal();
+                showToast(`Jadwal di "${lokasi}" berhasil dihapus permanen.`, 'success');
                 renderView();
             } else {
-                showToast('Gagal: ' + result.message, 'error');
+                showToast('Gagal menghapus: ' + result.message, 'error');
+                // Kembalikan tombol ke keadaan semula jika gagal
+                btn.disabled = false;
+                btn.innerHTML = 'Ya, Hapus Permanen';
             }
         } catch (error) {
-            showToast('Terjadi kesalahan koneksi ke database.', 'error');
+            console.error('Error delete jadwal:', error);
+            showToast('Terjadi kesalahan koneksi ke database. Silakan coba lagi.', 'error');
+            btn.disabled = false;
+            btn.innerHTML = 'Ya, Hapus Permanen';
         }
-    }
+    };
 }
 
 // --- USER MODAL ---
